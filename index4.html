@@ -32,15 +32,7 @@
     html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
     body {
       font-family: var(--f-sans); color: var(--red-900); min-height: 100vh; -webkit-font-smoothing: antialiased; overflow-x: hidden;
-      background:
-        radial-gradient(900px 520px at 50% -8%, rgba(255,255,255,0.65), transparent 65%),
-        radial-gradient(700px 500px at 100% 45%, rgba(192,18,26,0.12), transparent 60%),
-        linear-gradient(180deg, #f7e5ae 0%, #e8c874 36%, #d6ab51 72%, #bb8c37 100%);
-      background-attachment: fixed;
-    }
-    body::before {
-      content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0; opacity: .06;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      background: #f2e2b4;
     }
 
     /* GLASS */
@@ -54,21 +46,7 @@
 
     /* BACKGROUND */
     .progress { position: fixed; top: 0; left: 0; right: 0; height: 3px; z-index: 300; transform-origin: 0 50%; transform: scaleX(0); background: linear-gradient(90deg, var(--red-600), var(--gold), var(--red-600)); box-shadow: 0 0 12px rgba(192,18,26,0.6); }
-    .bg-blobs { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
-    .blob { position: absolute; border-radius: 50%; filter: blur(70px); will-change: transform; }
-    .blob.b1 { width: 55vmax; height: 55vmax; left: -18vmax; top: -12vmax; background: rgba(217,38,46,0.42); animation: drift 22s ease-in-out infinite alternate; }
-    .blob.b2 { width: 48vmax; height: 48vmax; right: -16vmax; top: 30vh; background: rgba(255,255,255,0.7); animation: drift 26s ease-in-out infinite alternate-reverse; }
-    .blob.b3 { width: 50vmax; height: 50vmax; left: 10vmax; bottom: -22vmax; background: rgba(192,18,26,0.34); animation: drift 30s ease-in-out infinite alternate; }
-    @keyframes drift { from { transform: translate3d(0,0,0) scale(1); } to { transform: translate3d(6vmax,-5vmax,0) scale(1.15); } }
 
-
-    /* FOOD BG: a few soft ingredients tied to the menu (basil, tomato, lemon, coffee, pistachio, cheese) */
-    .food-bg { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
-    .food { position: absolute; width: var(--s); opacity: .55; filter: drop-shadow(0 14px 18px rgba(108,6,11,.22)) blur(var(--b, 0px));
-      transform: translate3d(0, calc(var(--sf, 0) * var(--dy)), 0) rotate(calc(var(--sf, 0) * var(--rot) + var(--r0))); will-change: transform; }
-    .food svg { display: block; width: 100%; height: auto; animation: bob 7s ease-in-out infinite alternate; animation-delay: var(--d, 0s); }
-    @keyframes bob { from { transform: translateY(-8px) rotate(-3deg); } to { transform: translateY(10px) rotate(3deg); } }
-    @media (max-width: 640px) { .food:nth-child(n+5) { display: none; } .food { opacity: .42; } }
 
     /* BRAND */
     .ld-logo { display: inline-flex; align-items: flex-end; position: relative; font-family: var(--f-brand); font-weight: 800; letter-spacing: -0.02em; line-height: 1; color: var(--white); }
@@ -148,8 +126,8 @@
     .ring.r1 { border: 3px solid rgba(169,125,44,0.75); box-shadow: 0 0 60px rgba(255,255,255,0.55) inset, 0 0 40px rgba(217,178,95,0.5); }
     .ring.r2 { inset: 13%; border: 2px dashed rgba(163,13,20,0.7); transform: rotate(calc(var(--rot, 0deg) * -1)); }
     .ring.r3 { inset: 27%; border: 2px solid rgba(255,255,255,0.8); background: radial-gradient(circle, rgba(255,255,255,0.55), rgba(217,178,95,0.15) 70%); transform: rotate(var(--rot, 0deg)); }
-    .stage-body model-viewer { position: absolute; inset: 0; width: 100%; height: 100%; background: transparent; pointer-events: none; --poster-color: transparent; --progress-bar-color: #a30d14; --progress-mask: transparent; opacity: .35; transition: opacity .6s var(--ease); filter: drop-shadow(0 34px 34px rgba(108,6,11,0.38)); }
-    .stage-body model-viewer.ready { opacity: 1; }
+    .show-stack { position: absolute; inset: 0; }
+    .show-stack model-viewer { position: absolute; inset: 0; width: 100%; height: 100%; background: transparent; pointer-events: none; opacity: 0; visibility: hidden; --poster-color: transparent; --progress-bar-color: #a30d14; --progress-mask: transparent; filter: drop-shadow(0 34px 34px rgba(108,6,11,0.38)); will-change: opacity; }
 
     /* floating AI / AR labels around the 3D dish */
     .float-tag { position: absolute; z-index: 4; max-width: 170px; padding: 10px 13px; border-radius: 18px; font: 600 11px/1.45 var(--f-sans); color: var(--red-900); pointer-events: none; transition: transform .25s linear; }
@@ -354,16 +332,6 @@
 </svg>
 
 <div class="progress" id="progress"></div>
-<div class="bg-blobs" aria-hidden="true"><i class="blob b1"></i><i class="blob b2"></i><i class="blob b3"></i></div>
-<div class="food-bg" id="food-bg" aria-hidden="true">
-  <div class="food" style="--s:92px;left:3%;top:16%;--dy:-140px;--rot:60deg;--r0:-20deg;--d:0s"><svg viewBox="0 0 100 100"><path d="M50 95C20 80 10 45 50 8c40 37 30 72 0 87z" fill="#4f8a3c"/><path d="M50 92V20M50 45l-14-12M50 60l-18-14M50 45l14-12M50 60l18-14" stroke="#cfe8b0" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg></div>
-  <div class="food" style="--s:110px;right:4%;top:12%;--dy:120px;--rot:-90deg;--r0:10deg;--d:-2s"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="#b80f17"/><circle cx="50" cy="50" r="38" fill="#e8403a"/><g fill="#f7d98f"><ellipse cx="50" cy="30" rx="6" ry="11"/><ellipse cx="50" cy="70" rx="6" ry="11"/><ellipse cx="30" cy="50" rx="11" ry="6"/><ellipse cx="70" cy="50" rx="11" ry="6"/></g><circle cx="50" cy="50" r="7" fill="#f6b0a0"/></svg></div>
-  <div class="food" style="--s:84px;left:6%;top:62%;--dy:-110px;--rot:80deg;--r0:0deg;--d:-4s;--b:1.5px"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="#f0c230"/><circle cx="50" cy="50" r="39" fill="#fbe48c"/><path d="M50 12v76M12 50h76M23 23l54 54M77 23L23 77" stroke="#fff6c8" stroke-width="3"/><circle cx="50" cy="50" r="6" fill="#fff6c8"/></svg></div>
-  <div class="food" style="--s:70px;right:7%;top:68%;--dy:-130px;--rot:70deg;--r0:25deg;--d:-1s"><svg viewBox="0 0 100 100"><ellipse cx="50" cy="50" rx="30" ry="43" fill="#5a2e1a" transform="rotate(30 50 50)"/><path d="M38 15C58 40 40 60 62 85" stroke="#2b140a" stroke-width="5" fill="none" stroke-linecap="round"/></svg></div>
-  <div class="food" style="--s:64px;left:44%;top:6%;--dy:90px;--rot:-50deg;--r0:15deg;--d:-3s;--b:2px"><svg viewBox="0 0 100 100"><ellipse cx="50" cy="55" rx="26" ry="36" fill="#cdb98a"/><ellipse cx="50" cy="55" rx="18" ry="28" fill="#8fb85a"/><path d="M50 22v66" stroke="#cdb98a" stroke-width="3"/></svg></div>
-  <div class="food" style="--s:104px;right:14%;top:84%;--dy:-100px;--rot:40deg;--r0:-8deg;--d:-5s;--b:1.5px"><svg viewBox="0 0 100 100"><path d="M8 72L92 38V72Z" fill="#f2c14e"/><path d="M8 72L92 72L92 80L8 80Z" fill="#d9a62e"/><g fill="#e0a526"><circle cx="40" cy="62" r="6"/><circle cx="66" cy="56" r="5"/><circle cx="78" cy="67" r="4"/></g></svg></div>
-</div>
-
 <header class="hero" id="hero">
   <div class="hero-top">
     <select id="lang-select" aria-label="Language">
@@ -414,6 +382,27 @@
 
   <div class="scroll-cue glass"><span class="mouse"><i></i></span><span id="ui-scroll">Scroll to explore</span></div>
 </header>
+
+<!-- Scroll-driven 3D dish showcase -->
+<section class="showcase" id="showcase" aria-label="Chef's showcase" style="display:none">
+  <div class="stage">
+    <div class="stage-head glass"><span id="ui-showcase">Chef's Showcase</span></div>
+
+    <div class="stage-body">
+      <div class="halo" aria-hidden="true"><i class="ring r1"></i><i class="ring r2"></i><i class="ring r3"></i></div>
+      <div class="show-stack" id="show-stack"></div>
+
+      <aside class="float-tag glass" id="ft-ar"><b>AR</b><span id="ft-ar-t"></span></aside>
+      <aside class="float-tag glass" id="ft-ai"><b>AI</b><span id="ft-ai-t"></span></aside>
+
+      <div class="zoom-ctl glass" id="zoom-ctl">
+        <button class="zbtn" id="z-out" type="button" aria-label="Zoom out">−</button>
+        <input id="z-range" type="range" min="1" max="3" step="0.05" value="1" aria-label="Zoom" />
+        <button class="zbtn" id="z-in" type="button" aria-label="Zoom in">+</button>
+        <span class="zval" id="z-val">1.0×</span>
+      </div>
+    </div>
+
     <div class="stage-card glass" id="stage-card">
       <div class="sc-swap" id="sc-swap">
         <div class="sc-top"><span class="sc-count" id="sc-count">01 / 01</span><span class="sc-cat" id="sc-cat"></span></div>
@@ -881,11 +870,8 @@ $('modal-close').addEventListener('click', closeModal);
 $('modal-overlay').addEventListener('click', e => { if (e.target === $('modal-overlay')) closeModal(); });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
 
-/* ───────────── SCROLL-DRIVEN 3D SHOWCASE + ZOOM ───────────── */
-let showList = [], showIdx = -1, showZoom = 1;   // showZoom multiplies camera distance (smaller = closer)
-const showMV = $('show-mv');
-showMV.addEventListener('load',  () => showMV.classList.add('ready'));
-showMV.addEventListener('error', () => showMV.classList.add('ready'));
+/* ───────────── ZOOM-THROUGH SHOWCASE: each dish zooms in, then the next dish zooms up from far away ───────────── */
+let showList = [], showIdx = -1, showZoom = 1, showMVs = [];   // showZoom multiplies camera distance (smaller = closer)
 
 function setZoomUI(level) {                       // level: 1× .. 3×
   $('z-range').value = level;
@@ -902,7 +888,20 @@ function renderShowcase() {
   const sec = $('showcase');
   if (!showList.length) { sec.style.display = 'none'; return; }
   sec.style.display = '';
-  sec.style.setProperty('--sh', `${showList.length * 55 + 100}vh`);
+  sec.style.setProperty('--sh', `${showList.length * 80 + 100}vh`);
+  const stack = $('show-stack');
+  stack.innerHTML = '';
+  showMVs = showList.map(d => {
+    const mv = document.createElement('model-viewer');
+    Object.entries({
+      src: d.glbPath, poster: d.posterPath || '', alt: d.name, 'camera-orbit': '-40deg 72deg 130%', 'field-of-view': '30deg',
+      'min-camera-orbit': 'auto auto 25%', 'max-camera-orbit': 'auto auto 320%', 'shadow-intensity': '1', 'shadow-softness': '0.9',
+      exposure: '1.1', 'environment-image': 'neutral', 'interaction-prompt': 'none', 'disable-zoom': '', 'disable-pan': '',
+      loading: 'eager', reveal: 'auto', 'interpolation-decay': '50'
+    }).forEach(([k, v]) => mv.setAttribute(k, v));
+    stack.appendChild(mv);
+    return mv;
+  });
   $('sc-dots').innerHTML = showList.map((d, i) => `<button type="button" class="dot" data-i="${i}" aria-label="${esc(d.name)}"></button>`).join('');
   $('sc-dots').querySelectorAll('.dot').forEach(b => b.addEventListener('click', () => scrollToShow(+b.dataset.i)));
   showIdx = -1;
@@ -910,10 +909,10 @@ function renderShowcase() {
 }
 
 function scrollToShow(i) {
-  const sec = $('showcase');
+  const sec = $('showcase'), n = showList.length;
   const top = sec.getBoundingClientRect().top + window.scrollY;
   const span = sec.offsetHeight - window.innerHeight;
-  window.scrollTo({ top: top + span * ((i + 0.5) / showList.length), behavior: reduceMotion ? 'auto' : 'smooth' });
+  window.scrollTo({ top: top + span * (i + 0.3) / (n - 0.4), behavior: reduceMotion ? 'auto' : 'smooth' });
 }
 
 function setShowDish(idx) {
@@ -931,32 +930,38 @@ function setShowDish(idx) {
   $('ft-ai-t').textContent = aiShort(d) + ' · ' + t.ftAI;
   $('sc-dots').querySelectorAll('.dot').forEach((b, i) => b.classList.toggle('active', i === idx));
   const sw = $('sc-swap'); sw.classList.remove('pop'); void sw.offsetWidth; sw.classList.add('pop');
-
-  if (showMV.getAttribute('src') !== d.glbPath) {
-    showMV.classList.remove('ready');
-    showMV.setAttribute('poster', d.posterPath || '');
-    showMV.setAttribute('src', d.glbPath);
-  } else {
-    showMV.classList.add('ready');
-  }
 }
 
 function updateShowcase() {
-  if (!showList.length) return;
+  if (!showList.length || showMVs.length !== showList.length) return;
   const sec = $('showcase');
   const r = sec.getBoundingClientRect(), vh = window.innerHeight;
   if (r.top > vh * 1.5 || r.bottom < -vh * 0.5) return;
+  const n = showList.length;
   const span = Math.max(1, r.height - vh);
   const p = clamp(-r.top / span, 0, 1);
   sec.style.setProperty('--rot', (p * 540).toFixed(1) + 'deg');
-  const n = showList.length, f = p * n;
-  const idx = Math.min(n - 1, Math.floor(f));
-  const local = clamp(f - idx, 0, 1);
+  const f = p * (n - 0.4);                                   // 0 .. n-0.4 (last dish stops mid-zoom)
+  const idx = clamp(Math.floor(f + 0.2), 0, n - 1);
   if (idx !== showIdx) setShowDish(idx);
-  // scroll spins the dish AND slowly zooms in on it; the slider/buttons scale that further
-  const radius = lerp(135, 85, ease(local)) * showZoom;
-  showMV.cameraOrbit = `${(-40 + local * 320).toFixed(1)}deg 74deg ${radius.toFixed(1)}%`;
-  const drift = (local - .5) * 36;
+
+  showMVs.forEach((mv, i) => {
+    let u = f - i;                                           // this dish's own timeline
+    if (i === 0 && u < 0) u = 0;
+    if (i === n - 1 && u > 0.6) u = 0.6;
+    let rad = 130, op = 0;
+    if (u >= -0.4 && u < 1) {
+      if (u < 0)        { const t = (u + 0.4) / 0.4; rad = lerp(320, 130, 1 - Math.pow(1 - t, 3)); op = t; }   // arrives from far away
+      else if (u < 0.6) { rad = lerp(130, 75, u / 0.6); op = 1; }                                            // slow push-in
+      else              { const t = (u - 0.6) / 0.4; rad = lerp(75, 26, t * t); op = 1 - ease(t); }         // fly into the dish, fade out
+    }
+    mv.style.opacity = op.toFixed(3);
+    mv.style.visibility = op > 0.01 ? 'visible' : 'hidden';
+    mv.style.zIndex = u >= 0 ? 2 : 1;                        // leaving dish passes in front of the arriving one
+    if (op > 0.01) mv.cameraOrbit = `${(-40 + clamp(u, -0.4, 1) * 200).toFixed(1)}deg 72deg ${(rad * showZoom).toFixed(1)}%`;
+  });
+
+  const drift = ((f - Math.floor(f)) - .5) * 36;
   $('ft-ar').style.transform = `translateY(${(-drift).toFixed(1)}px)`;
   $('ft-ai').style.transform = `translateY(${drift.toFixed(1)}px)`;
 }
@@ -964,7 +969,7 @@ function updateShowcase() {
 $('sc-ar').addEventListener('click', () => { const d = showList[showIdx]; if (d) openModal(d.id); });
 
 /* ───────────── SCROLL ENGINE ───────────── */
-const heroEl = $('hero'), progressEl = $('progress'), foodEl = $('food-bg');
+const heroEl = $('hero'), progressEl = $('progress');
 let ticking = false, heroH = 600, scrollFrac = 0, mouseX = 0, mouseY = 0;
 
 function updateCards(vh) {
@@ -987,7 +992,6 @@ function update() {
   const max = Math.max(1, document.documentElement.scrollHeight - vh);
   scrollFrac = clamp(y / max, 0, 1);
   progressEl.style.transform = `scaleX(${scrollFrac.toFixed(4)})`;
-  if (!reduceMotion) foodEl.style.setProperty('--sf', scrollFrac.toFixed(4));
   if (!reduceMotion) {
     heroEl.style.setProperty('--hp', clamp(y / (heroH * 0.85), 0, 1).toFixed(4));
     updateCards(vh);
