@@ -414,31 +414,6 @@
 
   <div class="scroll-cue glass"><span class="mouse"><i></i></span><span id="ui-scroll">Scroll to explore</span></div>
 </header>
-
-<!-- Scroll-driven 3D dish showcase -->
-<section class="showcase" id="showcase" aria-label="Chef's showcase" style="display:none">
-  <div class="stage">
-    <div class="stage-head glass"><span id="ui-showcase">Chef's Showcase</span></div>
-
-    <div class="stage-body">
-      <div class="halo" aria-hidden="true"><i class="ring r1"></i><i class="ring r2"></i><i class="ring r3"></i></div>
-      <model-viewer id="show-mv" alt="3D dish preview"
-        camera-orbit="-40deg 74deg 125%" field-of-view="30deg"
-        min-camera-orbit="auto auto 30%" max-camera-orbit="auto auto 260%"
-        shadow-intensity="1" shadow-softness="0.9" exposure="1.1" environment-image="neutral"
-        interaction-prompt="none" disable-zoom disable-pan loading="eager" reveal="auto" interpolation-decay="70"></model-viewer>
-
-      <aside class="float-tag glass" id="ft-ar"><b>AR</b><span id="ft-ar-t"></span></aside>
-      <aside class="float-tag glass" id="ft-ai"><b>AI</b><span id="ft-ai-t"></span></aside>
-
-      <div class="zoom-ctl glass" id="zoom-ctl">
-        <button class="zbtn" id="z-out" type="button" aria-label="Zoom out">−</button>
-        <input id="z-range" type="range" min="1" max="3" step="0.05" value="1" aria-label="Zoom" />
-        <button class="zbtn" id="z-in" type="button" aria-label="Zoom in">+</button>
-        <span class="zval" id="z-val">1.0×</span>
-      </div>
-    </div>
-
     <div class="stage-card glass" id="stage-card">
       <div class="sc-swap" id="sc-swap">
         <div class="sc-top"><span class="sc-count" id="sc-count">01 / 01</span><span class="sc-cat" id="sc-cat"></span></div>
