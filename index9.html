@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
   <meta name="theme-color" content="#e8c874" />
   <title>Pinocchio — 3D AR Menu · LiveDish-AI</title>
-  <meta name="description" content="Immersive 3D AR menu for Pinocchio — Italian cuisine with scroll-driven 3D dish previews, interactive 3D ingredient hotspots, multi-dish AR Table Feast builder, and AR Snap & Share. Powered by LiveDish-AI." />
+  <meta name="description" content="Immersive 3D AR menu for Pinocchio — Italian cuisine with scroll-driven 3D dish previews, AI recommendations and AR table preview. Powered by LiveDish-AI." />
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -25,6 +25,7 @@
       --green: #2f7a3a; --green-bg: rgba(228,243,227,0.9);
       --glass-line: rgba(255,255,255,0.66); --glass-blur: blur(22px) saturate(1.6);
       --radius: 24px; --ease: cubic-bezier(0.22, 1, 0.36, 1);
+      --spring: cubic-bezier(0.34, 1.45, 0.64, 1);
       --f-display: 'Playfair Display', serif; --f-brand: 'Outfit', sans-serif;
       --f-sans: 'Inter', 'Noto Sans Kannada', 'Noto Sans Tamil', 'Noto Sans Malayalam', 'Noto Sans Telugu', system-ui, sans-serif;
     }
@@ -32,7 +33,7 @@
     html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
     body {
       font-family: var(--f-sans); color: var(--red-900); min-height: 100vh; -webkit-font-smoothing: antialiased; overflow-x: hidden;
-      background: #f2e2b4; padding-bottom: 90px;
+      background: #f2e2b4;
     }
 
     /* GLASS */
@@ -44,7 +45,7 @@
     }
     @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) { .glass { background: rgba(255,250,240,0.94); } }
 
-    /* BACKGROUND */
+    /* BACKGROUND PROGRESS */
     .progress { position: fixed; top: 0; left: 0; right: 0; height: 3px; z-index: 300; transform-origin: 0 50%; transform: scaleX(0); background: linear-gradient(90deg, var(--red-600), var(--gold), var(--red-600)); box-shadow: 0 0 12px rgba(192,18,26,0.6); }
 
     /* BRAND */
@@ -78,7 +79,7 @@
     .hero-panel {
       position: relative; z-index: 2; max-width: 780px; margin: 0 auto; padding: 2.6rem 1.5rem 2.1rem; border-radius: 40px; overflow: hidden; transform-origin: 50% 100%;
       transform: perspective(1200px) rotateX(calc(var(--hp, 0) * 18deg + var(--my, 0) * -3deg)) rotateY(calc(var(--mx, 0) * 4deg)) translate3d(0, calc(var(--hp, 0) * -50px), calc(var(--hp, 0) * -140px));
-      opacity: calc(1 - var(--hp, 0) * 0.85); transition: transform .2s linear; will-change: transform, opacity;
+      opacity: calc(1 - var(--hp, 0) * 0.85); will-change: transform, opacity;
     }
     .hero-panel::before { content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; background: linear-gradient(115deg, transparent 32%, rgba(255,255,255,0.6) 48%, transparent 62%); transform: translateX(-130%); animation: sheen 7s ease-in-out infinite; }
     @keyframes sheen { 0%, 55% { transform: translateX(-130%); } 100% { transform: translateX(130%); } }
@@ -119,16 +120,52 @@
     .stage { position: sticky; top: 0; height: 100vh; height: 100svh; width: 100%; max-width: 1080px; margin: 0 auto; padding: 14px max(10px, env(safe-area-inset-right)) 14px max(10px, env(safe-area-inset-left)); display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) auto; gap: 10px; }
     .stage > * { min-width: 0; }
     .stage-body { position: relative; min-height: 120px; }
-    .halo { position: absolute; left: 50%; top: 66%; width: min(84vw, 540px); aspect-ratio: 1; pointer-events: none; transform: translate(-50%, -50%) perspective(900px) rotateX(68deg); }
+    .halo { position: absolute; left: 50%; top: 66%; width: min(84vw, 540px); aspect-ratio: 1; pointer-events: none; transform: translate(-50%, -50%) perspective(900px) rotateX(68deg); z-index: 1; }
     .ring { position: absolute; inset: 0; border-radius: 50%; }
     .ring.r1 { border: 3px solid rgba(169,125,44,0.75); box-shadow: 0 0 60px rgba(255,255,255,0.55) inset, 0 0 40px rgba(217,178,95,0.5); }
     .ring.r2 { inset: 13%; border: 2px dashed rgba(163,13,20,0.7); transform: rotate(calc(var(--rot, 0deg) * -1)); }
     .ring.r3 { inset: 27%; border: 2px solid rgba(255,255,255,0.8); background: radial-gradient(circle, rgba(255,255,255,0.55), rgba(217,178,95,0.15) 70%); transform: rotate(var(--rot, 0deg)); }
-    .show-stack { position: absolute; inset: 0; }
+
+    /* Atmospheric Steam & Gold Bokeh Canvas */
+    #atmo-canvas {
+      position: absolute; inset: 0; width: 100%; height: 100%;
+      pointer-events: none; z-index: 3;
+    }
+
+    .show-stack { position: absolute; inset: 0; z-index: 2; }
     .show-stack model-viewer { position: absolute; inset: 0; width: 100%; height: 100%; background: transparent; pointer-events: none; opacity: 0; visibility: hidden; --poster-color: transparent; --progress-bar-color: #a30d14; --progress-mask: transparent; filter: drop-shadow(0 34px 34px rgba(108,6,11,0.38)); will-change: opacity; }
 
+    /* 3D Spatial Ingredient Hotspots */
+    .mv-hotspot {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 5px 11px 5px 7px; border-radius: 999px;
+      background: linear-gradient(135deg, rgba(255,252,244,0.92), rgba(255,244,218,0.78));
+      -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+      border: 1px solid rgba(255,255,255,0.95);
+      box-shadow: 0 8px 22px rgba(74,5,8,0.28), 0 0 0 1px rgba(217,178,95,0.45);
+      color: var(--red-900); font: 600 10.5px/1.2 var(--f-sans);
+      white-space: nowrap; pointer-events: auto; cursor: pointer;
+      opacity: calc(var(--hs-vis, 0) * var(--min-hotspot-opacity, 1));
+      transform: scale(calc(0.72 + var(--hs-vis, 0) * 0.28)) translateY(calc((1 - var(--hs-vis, 0)) * 8px));
+      transition: opacity .35s var(--ease), transform .4s var(--spring), box-shadow .25s;
+    }
+    .mv-hotspot:hover { transform: scale(1.07); box-shadow: 0 12px 28px rgba(74,5,8,0.4), 0 0 0 1.5px var(--gold); }
+    .mv-hotspot[slot]:not([data-visible]) { opacity: 0; pointer-events: none; }
+    .hs-dot {
+      width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0;
+      background: var(--red-600); border: 1.5px solid var(--gold-lt);
+      box-shadow: 0 0 0 3px rgba(217,38,46,0.25);
+      animation: hsPulse 2s ease-in-out infinite;
+    }
+    @keyframes hsPulse { 0%, 100% { box-shadow: 0 0 0 2px rgba(217,38,46,0.22); } 50% { box-shadow: 0 0 0 6px rgba(217,38,46,0.04); } }
+    .hs-tag {
+      font: 800 8.5px var(--f-brand); letter-spacing: .1em; text-transform: uppercase;
+      color: #fff; background: var(--red-grad); padding: 2px 6px; border-radius: 99px;
+    }
+    .hs-title { font-weight: 700; color: var(--red-900); }
+
     /* floating AI / AR labels around the 3D dish */
-    .float-tag { position: absolute; z-index: 4; max-width: 170px; padding: 10px 13px; border-radius: 18px; font: 600 11px/1.45 var(--f-sans); color: var(--red-900); pointer-events: none; transition: transform .25s linear; }
+    .float-tag { position: absolute; z-index: 4; max-width: 170px; padding: 10px 13px; border-radius: 18px; font: 600 11px/1.45 var(--f-sans); color: var(--red-900); pointer-events: none; will-change: transform; }
     .float-tag b { display: block; font: 800 12px var(--f-brand); letter-spacing: .14em; color: var(--red-600); margin-bottom: 2px; }
     #ft-ar { left: 0; top: 14%; }
     #ft-ai { right: 0; top: 30%; }
@@ -140,7 +177,7 @@
     .zoom-ctl input[type=range] { width: min(120px, 24vw); accent-color: var(--red-700); }
     .zval { min-width: 34px; text-align: center; }
 
-    .stage-card { justify-self: center; width: 100%; max-width: 560px; padding: 1.15rem 1.3rem 1.05rem; border-radius: 30px; color: var(--ink); }
+    .stage-card { justify-self: center; width: 100%; max-width: 560px; padding: 1.15rem 1.3rem 1.05rem; border-radius: 30px; color: var(--ink); z-index: 5; }
     .sc-swap.pop { animation: rise .5s var(--ease); }
     @keyframes rise { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
     .sc-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 6px; }
@@ -151,14 +188,13 @@
     .sc-tech { display: grid; gap: 6px; margin-top: 10px; }
     .tech-row { display: flex; gap: 8px; align-items: flex-start; padding: 8px 11px; border-radius: 14px; background: rgba(255,255,255,0.5); border: 1px solid rgba(255,255,255,0.8); font-size: 12px; line-height: 1.45; color: var(--ink-mid); }
     .tech-row b { flex-shrink: 0; font: 800 10.5px var(--f-brand); letter-spacing: .12em; color: #fff; background: var(--red-grad); padding: 3px 8px; border-radius: 99px; margin-top: 1px; }
-    .sc-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
-    .sc-actions { display: flex; align-items: center; gap: 8px; }
+    .sc-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 12px; }
     .sc-price { font-family: var(--f-display); font-size: 30px; font-weight: 700; color: var(--red-700); display: flex; align-items: baseline; gap: 2px; line-height: 1; }
     .dots { display: flex; justify-content: center; gap: 7px; margin-top: 12px; }
     .dot { width: 8px; height: 8px; border-radius: 99px; border: none; background: rgba(108,6,11,0.25); cursor: pointer; transition: all .35s var(--ease); }
     .dot.active { width: 28px; background: var(--red-grad); }
 
-    /* Menu filters inside stage */
+    /* Menu filters inside the stage */
     .stage > .controls { position: relative; top: auto; z-index: 10; width: 100%; max-width: 640px; margin: 0; justify-self: center; }
     .stage .controls-inner { padding: 9px 11px 8px; gap: 8px; }
     .stage #search, .stage .veg-toggle { height: 40px; }
@@ -173,7 +209,7 @@
     }
     @media (max-width: 899px) { .float-tag { max-width: 128px; font-size: 10px; padding: 7px 10px; } #ft-ai { top: 24%; } }
 
-    /* CONTROLS */
+    /* CONTROLS & SPRING SLIDING PILL TABS */
     .controls { position: sticky; top: 10px; z-index: 100; max-width: 1080px; width: calc(100% - 20px); margin: 0 auto; border-radius: 28px; }
     .controls-inner { padding: 12px 14px 11px; display: flex; flex-direction: column; gap: 10px; }
     .search-row { display: flex; gap: 10px; align-items: center; }
@@ -188,14 +224,40 @@
     .veg-toggle[aria-pressed="true"] { background: var(--green-bg); color: var(--green); border-color: rgba(47,122,58,0.5); }
     .veg-toggle[aria-pressed="true"] .sw { background: var(--green); }
     .veg-toggle[aria-pressed="true"] .sw::after { transform: translateX(13px); }
-    .tabs-inner { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
+
+    .tabs-inner { position: relative; display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
     .tabs-inner::-webkit-scrollbar { display: none; }
-    .tab-btn { flex-shrink: 0; cursor: pointer; padding: 9px 20px; border-radius: 999px; background: rgba(255,255,255,0.4); color: var(--red-900); border: 1px solid rgba(255,255,255,0.8); font: 600 12.5px var(--f-sans); letter-spacing: .03em; transition: all .3s var(--ease); white-space: nowrap; }
-    .tab-btn:hover { background: rgba(255,255,255,0.75); transform: translateY(-1px); }
-    .tab-btn.active { color: var(--gold-lt); border-color: transparent; background: var(--red-grad); box-shadow: 0 8px 20px rgba(108,6,11,0.4), inset 0 1px 0 rgba(255,255,255,0.3); }
+    /* Shared-element Sliding Pill Indicator */
+    .tab-pill {
+      position: absolute; top: 0; left: 0;
+      height: calc(100% - 2px);
+      width: var(--pw, 0px);
+      border-radius: 999px;
+      background: var(--red-grad);
+      box-shadow: 0 8px 20px rgba(108,6,11,0.4), inset 0 1px 0 rgba(255,255,255,0.35);
+      pointer-events: none; z-index: 0;
+      transform-origin: 50% 50%;
+      transform: translate3d(var(--px, 0px), 0, 0) scaleX(var(--psx, 1)) scaleY(var(--psy, 1));
+      transition: transform .48s var(--spring), width .42s var(--ease);
+      will-change: transform, width;
+    }
+    .tab-btn {
+      position: relative; z-index: 1; flex-shrink: 0; cursor: pointer;
+      padding: 9px 20px; border-radius: 999px;
+      background: rgba(255,255,255,0.38); color: var(--red-900);
+      border: 1px solid rgba(255,255,255,0.78);
+      font: 600 12.5px var(--f-sans); letter-spacing: .03em;
+      transition: color .3s var(--ease), background-color .3s, border-color .3s, transform .25s var(--ease);
+      white-space: nowrap;
+    }
+    .tab-btn:hover:not(.active) { background: rgba(255,255,255,0.75); transform: translateY(-1px); }
+    .tab-btn.active { color: var(--gold-lt); border-color: transparent; background: transparent; }
 
     /* MAIN */
     .main { position: relative; z-index: 1; max-width: 1080px; margin: 0 auto; padding: 1.4rem 1rem 4rem; }
+    #items-container {
+      --v-skew: 0deg; --v-rx: 0deg; --v-sx: 1; --v-sy: 1;
+    }
     .section-label { display: flex; align-items: center; gap: 16px; margin: 2.4rem 0 1.4rem; font-family: var(--f-display); font-size: 28px; font-weight: 700; letter-spacing: .03em; color: var(--red-900); text-shadow: 0 1px 0 rgba(255,255,255,0.6); }
     .section-label:first-child { margin-top: .8rem; }
     .section-label::before { content: ''; width: 10px; height: 10px; background: var(--red-grad); transform: rotate(45deg); flex-shrink: 0; }
@@ -207,7 +269,7 @@
     .card-cell { display: block; min-width: 0; }
     .card-cell > .menu-card { height: 100%; }
 
-    /* CARDS */
+    /* CARDS (with Velocity-Based Skew, Stretch & 3D Aerodynamic Pitch) */
     .menu-card {
       position: relative; overflow: hidden; display: flex; gap: 14px; padding: 12px; color: var(--ink); cursor: pointer; border-radius: var(--radius);
       background: linear-gradient(135deg, rgba(255,255,255,0.64), rgba(255,255,255,0.26));
@@ -215,8 +277,19 @@
       border: 1px solid rgba(255,255,255,0.75);
       box-shadow: 0 16px 42px rgba(108,6,11,0.24), inset 0 1px 0 rgba(255,255,255,0.95), inset 0 0 0 1px rgba(217,178,95,0.26);
       -webkit-tap-highlight-color: transparent;
-      transform: perspective(1100px) rotateX(calc(var(--srx, 0deg) + var(--hrx, 0deg))) rotateY(var(--hry, 0deg)) translate3d(0, var(--sty, 0px), 0) scale(calc(var(--sc, 1) * var(--hs, 1)));
-      opacity: var(--so, 1); transition: transform .18s linear, opacity .18s linear, box-shadow .3s, border-color .3s; will-change: transform, opacity;
+      transform: perspective(1100px)
+        rotateX(calc(var(--srx, 0deg) + var(--hrx, 0deg) + var(--v-rx, 0deg)))
+        rotateY(var(--hry, 0deg))
+        skewY(var(--v-skew, 0deg))
+        translate3d(0, var(--sty, 0px), 0)
+        scale3d(
+          calc(var(--sc, 1) * var(--hs, 1) * var(--v-sx, 1)),
+          calc(var(--sc, 1) * var(--hs, 1) * var(--v-sy, 1)),
+          1
+        );
+      opacity: var(--so, 1);
+      transition: box-shadow .3s, border-color .3s;
+      will-change: transform, opacity;
     }
     .menu-card::after { content: ''; position: absolute; inset: 0; pointer-events: none; border-radius: inherit; background: radial-gradient(280px circle at var(--gx, 50%) var(--gy, 0%), rgba(255,255,255,0.7), transparent 62%); opacity: 0; transition: opacity .25s; }
     .menu-card:hover { --hs: 1.025; border-color: #fff; box-shadow: 0 30px 64px rgba(108,6,11,0.36), inset 0 1px 0 #fff, inset 0 0 0 1px rgba(217,178,95,0.5); }
@@ -240,17 +313,12 @@
     .tech-line { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 9px; }
     .tech-chip { font: 600 10px var(--f-sans); letter-spacing: .03em; padding: 3px 9px; border-radius: 99px; background: rgba(255,255,255,0.6); border: 1px solid rgba(163,13,20,0.22); color: var(--red-800); }
     .tech-chip b { color: var(--gold-dk); font-weight: 800; margin-right: 2px; }
-    .card-footer { margin-top: auto; padding-top: 12px; display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
-    .card-actions { display: flex; align-items: center; gap: 6px; }
+    .card-footer { margin-top: auto; padding-top: 12px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
     .dish-price { font-family: var(--f-display); font-size: 25px; font-weight: 700; color: var(--red-700); display: flex; align-items: baseline; gap: 2px; line-height: 1; }
     .price-sym { font: 700 13px var(--f-sans); color: var(--gold-dk); }
-    .ar-btn { display: inline-flex; align-items: center; gap: 6px; background: var(--red-grad); color: #fff; border: 1px solid rgba(255,255,255,0.5); border-radius: 99px; padding: 7px 13px; min-height: 36px; font: 700 11px var(--f-sans); letter-spacing: .04em; cursor: pointer; transition: all .25s var(--ease); box-shadow: 0 8px 18px rgba(163,13,20,0.36), inset 0 1px 0 rgba(255,255,255,0.35); -webkit-tap-highlight-color: transparent; }
-    .ar-btn svg { width: 13px; height: 13px; }
+    .ar-btn { display: inline-flex; align-items: center; gap: 7px; background: var(--red-grad); color: #fff; border: 1px solid rgba(255,255,255,0.5); border-radius: 99px; padding: 8px 15px; min-height: 38px; font: 700 11.5px var(--f-sans); letter-spacing: .04em; cursor: pointer; transition: all .25s var(--ease); box-shadow: 0 8px 18px rgba(163,13,20,0.36), inset 0 1px 0 rgba(255,255,255,0.35); -webkit-tap-highlight-color: transparent; }
+    .ar-btn svg { width: 14px; height: 14px; }
     .ar-btn:hover { transform: translateY(-2px); box-shadow: 0 14px 26px rgba(163,13,20,0.5), inset 0 1px 0 rgba(255,255,255,0.35); }
-    .feast-add-btn { display: inline-flex; align-items: center; gap: 4px; background: rgba(255,255,255,0.75); color: var(--red-900); border: 1px solid rgba(169,125,44,0.6); border-radius: 99px; padding: 7px 11px; min-height: 36px; font: 700 11px var(--f-sans); cursor: pointer; transition: all .22s var(--ease); -webkit-tap-highlight-color: transparent; }
-    .feast-add-btn:hover { background: #fff; transform: translateY(-2px); }
-    .feast-add-btn.added { background: var(--gold-grad); color: var(--red-950); border-color: #fff; box-shadow: 0 6px 16px rgba(169,125,44,0.45); }
-
     @media (min-width: 640px) {
       .menu-card { flex-direction: column; gap: 0; padding: 10px; }
       .card-thumb { width: 100%; height: auto; aspect-ratio: 4 / 3; border-radius: 18px; font-size: 64px; }
@@ -258,314 +326,6 @@
       .dish-name { font-size: 21px; }
       .dish-desc { font-size: 13px; }
     }
-
-    /* ───────── FEATURE 1: 3D INGREDIENT HOTSPOTS ───────── */
-    .Hotspot {
-      background: rgba(255, 252, 245, 0.92);
-      border: 2px solid var(--gold);
-      border-radius: 999px;
-      box-shadow: 0 6px 18px rgba(74, 5, 8, 0.45), 0 0 0 4px rgba(217, 178, 95, 0.28);
-      color: var(--red-900);
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      padding: 5px 10px 5px 7px;
-      font: 700 11px/1.2 var(--f-sans);
-      transition: all 0.28s var(--ease);
-      transform: translate3d(-50%, -50%, 0);
-      outline: none;
-      z-index: 5;
-    }
-    .Hotspot:not([data-visible]) {
-      opacity: 0.22;
-      pointer-events: none;
-      transform: translate3d(-50%, -50%, 0) scale(0.8);
-    }
-    .Hotspot-dot {
-      width: 9px; height: 9px; border-radius: 50%;
-      background: var(--red-grad);
-      box-shadow: 0 0 0 2px #fff;
-      flex-shrink: 0;
-      animation: pulsePin 1.8s infinite;
-    }
-    @keyframes pulsePin {
-      0%, 100% { transform: scale(1); }
-      50% { transform: scale(1.28); }
-    }
-    .Hotspot-title { white-space: nowrap; letter-spacing: 0.02em; }
-    .Hotspot-Popover {
-      position: absolute;
-      bottom: calc(100% + 10px);
-      left: 50%;
-      transform: translateX(-50%) translateY(6px) scale(0.92);
-      width: 195px;
-      background: linear-gradient(155deg, rgba(74, 5, 8, 0.95), rgba(42, 12, 14, 0.96));
-      color: #fff;
-      border: 1px solid var(--gold);
-      border-radius: 16px;
-      padding: 10px 12px;
-      box-shadow: 0 14px 32px rgba(0,0,0,0.55);
-      opacity: 0;
-      pointer-events: none;
-      transition: all 0.25s var(--ease);
-      text-align: left;
-      z-index: 20;
-    }
-    .Hotspot.active {
-      background: var(--gold-grad);
-      border-color: #fff;
-      z-index: 25;
-      transform: translate3d(-50%, -50%, 0) scale(1.06);
-    }
-    .Hotspot.active .Hotspot-Popover {
-      opacity: 1;
-      transform: translateX(-50%) translateY(0) scale(1);
-    }
-    .Hotspot-Popover strong {
-      display: block;
-      font: 700 12px var(--f-display);
-      color: var(--gold-lt);
-      margin-bottom: 3px;
-    }
-    .Hotspot-Popover span {
-      display: block;
-      font: 400 10.5px/1.45 var(--f-sans);
-      color: rgba(255,255,255,0.88);
-      white-space: normal;
-    }
-    .hide-hotspots .Hotspot { display: none !important; }
-
-    /* Top-right viewer tool pills (Hotspot toggle + Snap & Share) */
-    .mv-tools-bar {
-      position: absolute;
-      top: 14px;
-      right: 62px;
-      z-index: 8;
-      display: flex;
-      gap: 7px;
-      align-items: center;
-    }
-    .mv-tool-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      padding: 6px 12px;
-      height: 36px;
-      border-radius: 99px;
-      background: rgba(255,255,255,0.86);
-      -webkit-backdrop-filter: blur(10px);
-      backdrop-filter: blur(10px);
-      border: 1px solid #fff;
-      color: var(--red-900);
-      font: 700 11px var(--f-sans);
-      cursor: pointer;
-      box-shadow: 0 4px 14px rgba(0,0,0,0.25);
-      transition: all 0.2s var(--ease);
-    }
-    .mv-tool-btn:hover { background: #fff; transform: translateY(-1px); }
-    .mv-tool-btn.active { background: var(--gold-grad); color: var(--red-950); border-color: #fff; }
-
-    /* ───────── FEATURE 2: FLOATING FEAST TRAY & MULTI-DISH MODAL ───────── */
-    .feast-tray {
-      position: fixed;
-      left: 50%;
-      bottom: max(14px, env(safe-area-inset-bottom));
-      transform: translateX(-50%) translateY(140%);
-      z-index: 8500;
-      width: calc(100% - 24px);
-      max-width: 680px;
-      padding: 10px 14px;
-      border-radius: 999px;
-      background: linear-gradient(135deg, rgba(74, 5, 8, 0.94), rgba(108, 6, 11, 0.92));
-      -webkit-backdrop-filter: blur(22px) saturate(1.6);
-      backdrop-filter: blur(22px) saturate(1.6);
-      border: 1.5px solid var(--gold);
-      box-shadow: 0 20px 50px rgba(42, 12, 14, 0.6), inset 0 1px 0 rgba(255,255,255,0.35);
-      color: #fff;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      transition: transform 0.4s var(--ease);
-    }
-    .feast-tray.visible { transform: translateX(-50%) translateY(0); }
-    .feast-avatars { display: flex; align-items: center; padding-left: 6px; }
-    .feast-avatar {
-      width: 38px; height: 38px; border-radius: 50%;
-      border: 2px solid var(--gold-lt);
-      background: #fff;
-      margin-left: -10px;
-      overflow: hidden;
-      display: grid;
-      place-items: center;
-      font-size: 18px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.35);
-    }
-    .feast-avatar:first-child { margin-left: 0; }
-    .feast-avatar img { width: 100%; height: 100%; object-fit: cover; }
-    .feast-meta { flex: 1; min-width: 0; }
-    .feast-meta-title { font: 700 12.5px var(--f-sans); color: var(--gold-lt); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .feast-meta-sub { font: 600 11px var(--f-sans); color: rgba(255,255,255,0.82); }
-    .feast-tray-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
-    .feast-open-btn {
-      background: var(--gold-grad);
-      color: var(--red-950);
-      border: none;
-      border-radius: 99px;
-      padding: 10px 18px;
-      font: 800 12px var(--f-sans);
-      letter-spacing: 0.04em;
-      cursor: pointer;
-      box-shadow: 0 6px 18px rgba(0,0,0,0.35);
-      transition: transform 0.2s var(--ease);
-      white-space: nowrap;
-    }
-    .feast-open-btn:hover { transform: scale(1.04); }
-    .feast-clear-btn {
-      width: 32px; height: 32px; border-radius: 50%;
-      border: 1px solid rgba(255,255,255,0.35);
-      background: rgba(255,255,255,0.12);
-      color: #fff; cursor: pointer;
-      display: grid; place-items: center; font-size: 14px;
-    }
-
-    /* MULTI-DISH 3D TABLE STAGE */
-    .feast-modal-card { max-width: 780px; }
-    .feast-table-stage {
-      position: relative;
-      width: 100%;
-      height: 410px;
-      background: radial-gradient(circle at 50% 25%, #5e080d, #260204 85%);
-      overflow: hidden;
-      border-radius: 0 0 28px 28px;
-      perspective: 1100px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .feast-table-disc {
-      position: relative;
-      width: min(86vw, 480px);
-      aspect-ratio: 1;
-      border-radius: 50%;
-      background:
-        radial-gradient(circle at 50% 45%, rgba(255,248,231,0.96) 0%, rgba(236,214,172,0.94) 62%, rgba(182,138,68,0.95) 100%);
-      border: 8px solid #c89d4c;
-      box-shadow:
-        0 35px 80px rgba(0,0,0,0.75),
-        inset 0 0 40px rgba(108,6,11,0.22),
-        0 0 0 2px rgba(255,255,255,0.5);
-      transform: rotateX(24deg) translateY(12px);
-      transform-style: preserve-3d;
-      transition: transform 0.5s var(--ease);
-    }
-    .feast-table-disc::before {
-      content: 'PINOCCHIO · TABLE FEAST';
-      position: absolute;
-      left: 50%; top: 50%;
-      transform: translate(-50%, -50%);
-      font: 700 10px var(--f-brand);
-      letter-spacing: 0.35em;
-      color: rgba(108, 6, 11, 0.28);
-      white-space: nowrap;
-      pointer-events: none;
-    }
-    .feast-slot {
-      position: absolute;
-      width: 44%;
-      height: 44%;
-      transform: translate(-50%, -50%);
-      border-radius: 50%;
-      transition: all 0.35s var(--ease);
-      cursor: pointer;
-    }
-    .feast-slot::after {
-      content: '';
-      position: absolute;
-      inset: 12%;
-      border-radius: 50%;
-      border: 1.5px dashed rgba(169,125,44,0.55);
-      pointer-events: none;
-    }
-    .feast-slot.active-slot::after {
-      border: 2.5px solid var(--red-600);
-      box-shadow: 0 0 24px rgba(217,38,46,0.45);
-    }
-    .feast-slot model-viewer {
-      width: 100%;
-      height: 100%;
-      background: transparent;
-      --poster-color: transparent;
-      filter: drop-shadow(0 16px 18px rgba(42,12,14,0.45));
-    }
-    .feast-slot-label {
-      position: absolute;
-      bottom: -6px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(42,12,14,0.9);
-      color: var(--gold-lt);
-      border: 1px solid var(--gold);
-      padding: 3px 9px;
-      border-radius: 99px;
-      font: 700 10px var(--f-sans);
-      white-space: nowrap;
-      z-index: 5;
-      pointer-events: none;
-    }
-    .feast-chips-bar {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      margin: 12px 0;
-    }
-    .feast-chip {
-      display: inline-flex;
-      align-items: center;
-      gap: 7px;
-      padding: 7px 12px;
-      border-radius: 99px;
-      background: rgba(255,255,255,0.75);
-      border: 1.5px solid rgba(169,125,44,0.45);
-      font: 600 12px var(--f-sans);
-      color: var(--red-900);
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .feast-chip.active {
-      background: var(--red-grad);
-      color: #fff;
-      border-color: var(--gold);
-    }
-    .feast-chip button {
-      background: none;
-      border: none;
-      color: inherit;
-      font-weight: 800;
-      cursor: pointer;
-      margin-left: 2px;
-      opacity: 0.75;
-    }
-
-    /* Toast Notification for Snap & Share / Feast */
-    .ld-toast {
-      position: fixed;
-      top: 22px;
-      left: 50%;
-      transform: translateX(-50%) translateY(-100px);
-      z-index: 9999;
-      background: rgba(42, 12, 14, 0.95);
-      color: var(--gold-lt);
-      border: 1px solid var(--gold);
-      padding: 11px 20px;
-      border-radius: 99px;
-      font: 700 12.5px var(--f-sans);
-      box-shadow: 0 12px 30px rgba(0,0,0,0.45);
-      transition: transform 0.35s var(--ease);
-      pointer-events: none;
-    }
-    .ld-toast.show { transform: translateX(-50%) translateY(0); }
 
     /* STATES */
     .state-box { text-align: center; padding: 1.5rem 0; color: var(--red-900); }
@@ -593,7 +353,7 @@
     @keyframes popin { from { transform: perspective(900px) rotateX(10deg) scale(.94) translateY(14px); opacity: 0; } to { transform: none; opacity: 1; } }
     .grab { width: 42px; height: 4px; border-radius: 4px; background: rgba(255,255,255,0.7); position: absolute; top: 9px; left: 50%; transform: translateX(-50%); z-index: 12; }
     @media (min-width: 560px) { .grab { display: none; } }
-    .modal-viewer-wrap { position: relative; width: 100%; height: 340px; overflow: hidden; background: radial-gradient(circle at 50% 35%, #d9262e, #7a080d 80%); border-radius: 0 0 28px 28px; }
+    .modal-viewer-wrap { position: relative; width: 100%; height: 330px; overflow: hidden; background: radial-gradient(circle at 50% 35%, #d9262e, #7a080d 80%); border-radius: 0 0 28px 28px; }
     model-viewer { display: block; width: 100%; height: 100%; background: transparent; --progress-bar-color: #d9b25f; --progress-mask: transparent; }
     .mv-ar-badge { position: absolute; top: 16px; left: 16px; z-index: 6; background: var(--gold-grad); color: var(--red-900); border-radius: 99px; padding: 5px 13px; font: 700 10px var(--f-sans); letter-spacing: .14em; text-transform: uppercase; box-shadow: 0 4px 12px rgba(0,0,0,0.3); opacity: 0; transform: translateY(-6px); transition: all .4s var(--ease); pointer-events: none; }
     .mv-ar-badge.visible { opacity: 1; transform: none; }
@@ -602,20 +362,19 @@
     .modal-close { position: absolute; top: 14px; right: 14px; z-index: 12; width: 40px; height: 40px; border-radius: 50%; background: rgba(255,255,255,0.85); border: 1.5px solid #fff; color: var(--red-700); cursor: pointer; display: grid; place-items: center; -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); box-shadow: 0 4px 14px rgba(0,0,0,0.3); transition: all .25s var(--ease); }
     .modal-close svg { width: 14px; height: 14px; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; fill: none; }
     .modal-close:hover { background: var(--red-700); color: #fff; transform: rotate(90deg); }
-    .modal-ar-launch-btn { display: inline-flex; align-items: center; gap: 9px; background: var(--gold-grad); color: var(--red-900); border: none; border-radius: 99px; padding: 13px 24px; min-height: 46px; font: 700 12px var(--f-sans); letter-spacing: .08em; text-transform: uppercase; cursor: pointer; white-space: nowrap; box-shadow: 0 10px 28px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.6); transition: transform .2s var(--ease), box-shadow .2s; }
+    .modal-ar-launch-btn { display: inline-flex; align-items: center; gap: 9px; background: var(--gold-grad); color: var(--red-900); border: none; border-radius: 99px; padding: 13px 28px; min-height: 48px; font: 700 12.5px var(--f-sans); letter-spacing: .1em; text-transform: uppercase; cursor: pointer; white-space: nowrap; box-shadow: 0 10px 28px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.6); transition: transform .2s var(--ease), box-shadow .2s; }
     .modal-ar-launch-btn svg { width: 17px; height: 17px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
     .modal-ar-launch-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 14px 34px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.6); }
     .modal-ar-launch-btn:disabled { opacity: .9; cursor: progress; }
     .btn-spin { width: 14px; height: 14px; border: 2px solid rgba(108,6,11,.25); border-top-color: var(--red-900); border-radius: 50%; animation: spin .8s linear infinite; display: inline-block; }
     @keyframes spin { to { transform: rotate(360deg); } }
     .modal-body { padding: 18px 1.6rem 1.9rem; position: relative; z-index: 4; }
-    .modal-head-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
-    .modal-name { font-family: var(--f-display); font-size: 28px; font-weight: 700; color: var(--red-800); line-height: 1.2; }
-    .modal-body .tags-row { margin: 10px 0 0; }
-    .modal-desc { margin: 14px 0 14px; font-size: 14px; line-height: 1.75; color: var(--ink-mid); padding-left: 16px; border-left: 3px solid var(--gold); }
-    .modal-tech { display: grid; gap: 7px; margin-bottom: 18px; }
-    .modal-footer { display: flex; align-items: center; justify-content: space-between; padding-top: 16px; border-top: 1px solid rgba(169,125,44,0.4); gap: 10px; flex-wrap: wrap; }
-    .modal-price { font-family: var(--f-display); font-size: 38px; font-weight: 700; color: var(--red-700); display: flex; align-items: baseline; gap: 3px; line-height: 1; }
+    .modal-name { font-family: var(--f-display); font-size: 30px; font-weight: 700; color: var(--red-800); line-height: 1.2; }
+    .modal-body .tags-row { margin: 12px 0 0; }
+    .modal-desc { margin: 16px 0 14px; font-size: 14px; line-height: 1.8; color: var(--ink-mid); padding-left: 16px; border-left: 3px solid var(--gold); }
+    .modal-tech { display: grid; gap: 7px; margin-bottom: 20px; }
+    .modal-footer { display: flex; align-items: center; justify-content: space-between; padding-top: 18px; border-top: 1px solid rgba(169,125,44,0.4); }
+    .modal-price { font-family: var(--f-display); font-size: 40px; font-weight: 700; color: var(--red-700); display: flex; align-items: baseline; gap: 3px; line-height: 1; }
     .modal-price .price-sym { font-size: 18px; }
     .modal-note { font: 600 10.5px var(--f-sans); color: var(--ink-soft); letter-spacing: .1em; text-transform: uppercase; text-align: right; line-height: 1.5; max-width: 150px; }
 
@@ -630,14 +389,12 @@
     @media (max-width: 420px) {
       .card-thumb { width: 92px; height: 92px; }
       .dish-name { font-size: 18px; }
-      .modal-viewer-wrap { height: 300px; }
+      .modal-viewer-wrap { height: 290px; }
       .step-t { font-size: 12px; }
       .hero-panel { padding: 2rem 1rem 1.6rem; border-radius: 32px; }
-      .mv-tools-bar { right: 58px; gap: 4px; }
-      .mv-tool-btn { padding: 5px 9px; font-size: 10px; }
     }
 
-    /* ───────── RESPONSIVE ───────── */
+    /* ───────── RESPONSIVE: phones, tablets, landscape, desktop ───────── */
     html, body { max-width: 100%; overflow-x: hidden; }
     img, model-viewer { max-width: 100%; }
     .controls-inner, .search-row, .search-box, #search, .tabs-inner { min-width: 0; max-width: 100%; }
@@ -716,9 +473,7 @@
   </defs>
 </svg>
 
-<div class="ld-toast" id="ld-toast" role="status" aria-live="polite"></div>
 <div class="progress" id="progress"></div>
-
 <header class="hero" id="hero">
   <div class="hero-top">
     <select id="lang-select" aria-label="Language">
@@ -752,8 +507,8 @@
 
     <div class="hero-pills">
       <i><b>AR</b><span id="ui-hp1">Table preview at real size</span></i>
-      <i><b>AI</b><span id="ui-hp2">3D Ingredient Hotspots</span></i>
-      <i><b>3D</b><span id="ui-hp3">Multi-Dish Feast &amp; Snap</span></i>
+      <i><b>AI</b><span id="ui-hp2">Dish recommendations</span></i>
+      <i><b>3D</b><span id="ui-hp3">Zoom into every dish</span></i>
     </div>
 
     <div class="ar-banner"><span id="ui-ar-badge">Interactive 3D &amp; AR Preview</span></div>
@@ -774,7 +529,7 @@
 <section class="showcase" id="showcase" aria-label="Chef's showcase" style="display:none">
   <div class="stage">
 
-    <!-- Menu filters -->
+    <!-- Menu filters with Spring Sliding Pill -->
     <nav class="controls glass" aria-label="Menu filters">
       <div class="controls-inner">
         <div class="search-row">
@@ -788,8 +543,9 @@
       </div>
     </nav>
 
-    <div class="stage-body">
+    <div class="stage-body" id="stage-body">
       <div class="halo" aria-hidden="true"><i class="ring r1"></i><i class="ring r2"></i><i class="ring r3"></i></div>
+      <canvas id="atmo-canvas" aria-hidden="true"></canvas>
       <div class="show-stack" id="show-stack"></div>
 
       <aside class="float-tag glass" id="ft-ar"><b>AR</b><span id="ft-ar-t"></span></aside>
@@ -814,10 +570,7 @@
         </div>
         <div class="sc-foot">
           <div class="sc-price" id="sc-price"></div>
-          <div class="sc-actions">
-            <button class="feast-add-btn" id="sc-feast-btn" type="button">+ Feast</button>
-            <button class="ar-btn" id="sc-ar" type="button">View in AR</button>
-          </div>
+          <button class="ar-btn" id="sc-ar" type="button">View in AR</button>
         </div>
       </div>
       <div class="dots" id="sc-dots"></div>
@@ -833,20 +586,6 @@
   <div id="items-container" style="display:none"></div>
 </main>
 
-<!-- Floating Multi-Dish Feast Builder Tray -->
-<div class="feast-tray" id="feast-tray" role="region" aria-label="Table Feast Builder">
-  <div class="feast-avatars" id="feast-avatars"></div>
-  <div class="feast-meta">
-    <div class="feast-meta-title" id="feast-meta-title">My Table Feast</div>
-    <div class="feast-meta-sub" id="feast-meta-sub">0 dishes · ₹0</div>
-  </div>
-  <div class="feast-tray-actions">
-    <button class="feast-open-btn" id="feast-open-btn" type="button">🍽️ <span id="ui-feast-open">Preview Feast</span></button>
-    <button class="feast-clear-btn" id="feast-clear-btn" type="button" aria-label="Clear Feast">✕</button>
-  </div>
-</div>
-
-<!-- Single Dish Detail Modal (with 3D Ingredient Hotspots & Snap/Share) -->
 <div class="modal-overlay" id="modal-overlay" role="dialog" aria-modal="true" aria-label="Dish detail">
   <div class="modal-card">
     <span class="grab"></span>
@@ -854,17 +593,10 @@
 
     <div class="modal-viewer-wrap" id="modal-viewer-wrap">
       <div class="mv-ar-badge" id="mv-ar-badge">✦ AR Ready</div>
-      <div class="mv-tools-bar" id="mv-tools-bar">
-        <button class="mv-tool-btn active" id="mv-pins-btn" type="button" style="display:none">📍 <span id="ui-pins-toggle">Pins</span></button>
-        <button class="mv-tool-btn" id="mv-snap-btn" type="button">📸 <span id="ui-snap-btn">Snap</span></button>
-      </div>
     </div>
 
     <div class="modal-body">
-      <div class="modal-head-row">
-        <h2 class="modal-name" id="modal-name"></h2>
-        <button class="feast-add-btn" id="modal-feast-btn" type="button">+ Feast</button>
-      </div>
+      <h2 class="modal-name" id="modal-name"></h2>
       <div class="tags-row" id="modal-tags"></div>
       <p class="modal-desc" id="modal-desc"></p>
       <div class="modal-tech">
@@ -879,35 +611,6 @@
   </div>
 </div>
 
-<!-- AR "Full Table Feast" Builder Modal (Multi-Dish 3D Table Scene) -->
-<div class="modal-overlay" id="feast-overlay" role="dialog" aria-modal="true" aria-label="Full Table Feast 3D Preview">
-  <div class="modal-card feast-modal-card">
-    <span class="grab"></span>
-    <button class="modal-close" id="feast-close" aria-label="Close"><svg viewBox="0 0 24 24"><path d="M5 5l14 14M19 5L5 19"/></svg></button>
-
-    <div class="feast-table-stage" id="feast-table-stage">
-      <div class="mv-ar-badge visible" id="feast-badge">🍽️ 3D Table Feast</div>
-      <div class="mv-tools-bar">
-        <button class="mv-tool-btn" id="feast-snap-btn" type="button">📸 <span id="ui-feast-snap">Snap Feast</span></button>
-      </div>
-      <div class="feast-table-disc" id="feast-table-disc"></div>
-    </div>
-
-    <div class="modal-body">
-      <div class="modal-head-row">
-        <h2 class="modal-name" id="ui-feast-title">Your Full Table Feast</h2>
-        <button class="modal-ar-launch-btn" id="feast-launch-ar" type="button" style="padding:10px 18px;min-height:40px;font-size:11px;">Launch Dish in AR</button>
-      </div>
-      <p class="modal-desc" id="ui-feast-desc" style="margin:10px 0;">Tap any dish on the 3D table to inspect its portion &amp; launch it directly onto your real table in AR.</p>
-      <div class="feast-chips-bar" id="feast-chips-bar"></div>
-      <div class="modal-footer">
-        <div class="modal-price" id="feast-total-price"></div>
-        <div class="modal-note" id="feast-count-note"></div>
-      </div>
-    </div>
-  </div>
-</div>
-
 <footer class="site-footer">
   <span class="ld-logo" aria-label="LiveDish-AI">
     <svg class="leaf" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 3C10 3 4 8 4 15c0 1.6.4 3 1 4 1-4 4-8 9-10-4 3-6 7-7 11 1 .6 2.3 1 3.7 1C18 21 21 13 20 3z" fill="url(#goldG)"/></svg>
@@ -916,7 +619,7 @@
   <div class="ar-banner"><span>AR Menu Experience</span></div>
   <p>
     <span id="ui-footer">Tap any dish to view in 3D · Prices in ₹ · 🌿 Vegetarian friendly</span><br>
-    <span id="ui-footer-3">AI + AR: every dish is a 3D model you can zoom, inspect ingredients, combine into a Full Table Feast &amp; share.</span><br>
+    <span id="ui-footer-3">AI + AR: every dish is a 3D model you can zoom, place on your table and match to your taste.</span><br>
     <small id="ui-footer-2">AR requires a compatible mobile device · Model size reflects actual portion</small>
   </p>
 </footer>
@@ -933,27 +636,27 @@ const LOCAL_ASSETS = {
   'fried-calamari':                     { folder: 'Fried-Calamari',                     file: 'Fried-Calamari',                     scale: 0.25 }
 };
 
-/* ───────── FEATURE 1 DATA: 3D INGREDIENT HOTSPOTS MAP ───────── */
-const HOTSPOTS_MAP = {
+/* 3D Spatial Ingredient Hotspots mapped to each dish key */
+const DISH_HOTSPOTS = {
   'pistachio-sauce-bigne-with-ricotta': [
-    { pos: '0m 0.06m 0.04m',  norm: '0m 1m 0m', title: 'Bronte Pistachio Glaze', detail: 'Velvety Sicilian green pistachio reduction roasted for deep nutty aroma.' },
-    { pos: '0.04m 0.03m -0.02m', norm: '1m 0.5m 0m', title: 'Whipped Sheep Ricotta', detail: 'Airy artisanal ricotta filling folded with organic vanilla bean.' },
-    { pos: '-0.04m 0.02m 0.02m', norm: '-1m 0.5m 0m', title: 'Golden Choux Pastry', detail: 'Crisp, hollow Italian bignè baked fresh every morning.' }
+    { pos: '0 0.06 0.02',    norm: '0 1 0.2',   tag: 'DOP',     label: 'Bronte Pistachio Glaze' },
+    { pos: '0.05 0.03 -0.02',norm: '0.8 0.3 0', tag: 'FRESH',   label: 'Whipped Sheep Ricotta' },
+    { pos: '-0.04 0.02 0.04',norm: '-0.7 0.4 0.5', tag: 'PASTRY', label: 'Artisanal Choux Bignè' }
   ],
   'pinocchio-tiramisu': [
-    { pos: '0m 0.07m 0.02m',   norm: '0m 1m 0m', title: 'Valrhona Cocoa Dusting', detail: 'Bittersweet dark French cocoa sifted tableside for rich contrast.' },
-    { pos: '0.05m 0.04m 0.03m', norm: '1m 0.4m 0m', title: 'Mascarpone Sabayon', detail: 'Creamy Lombardy mascarpone whipped to a cloud-like texture.' },
-    { pos: '-0.04m 0.01m 0.04m', norm: '0m 0.3m 1m', title: 'Espresso Savoiardi', detail: ' Crisp ladyfingers soaked in single-origin Italian espresso.' }
+    { pos: '0 0.06 0.01',    norm: '0 1 0.2',   tag: 'VALRHONA', label: 'Velvet Cocoa Dusting' },
+    { pos: '0.05 0.03 0.03', norm: '0.7 0.3 0.5', tag: 'CREMA',  label: 'Aerated Mascarpone' },
+    { pos: '-0.05 0.01 -0.03',norm: '-0.7 0.2 -0.6', tag: 'ARABICA', label: 'Espresso Savoiardi' }
   ],
   'cheesy-green-lasagne': [
-    { pos: '0m 0.08m 0.02m',   norm: '0m 1m 0m', title: '24-Month Parmigiano Crust', detail: 'Broiled to bubbly golden perfection with aged Parmigiano-Reggiano.' },
-    { pos: '0.06m 0.04m 0.04m', norm: '1m 0.3m 0m', title: 'Spinach Pasta Sheets', detail: 'Hand-rolled emerald pasta infused with fresh organic baby spinach.' },
-    { pos: '-0.05m 0.03m 0.03m', norm: '-1m 0.4m 0m', title: 'Nutmeg Béchamel & Ragù', detail: 'Slow-simmered herbed sauce layered with silky white béchamel.' }
+    { pos: '0 0.05 0.02',    norm: '0 1 0.3',   tag: '24M DOP', label: 'Gratinated Parmigiano' },
+    { pos: '0.06 0.02 -0.01',norm: '0.8 0.2 -0.2', tag: 'SFOGLIA', label: 'Spinach Pasta Sheets' },
+    { pos: '-0.05 0.02 0.04',norm: '-0.6 0.3 0.7', tag: 'SIMMER', label: 'Nutmeg Béchamel' }
   ],
   'fried-calamari': [
-    { pos: '0m 0.06m 0.03m',   norm: '0m 1m 0m', title: 'Crisp Semolina Batter', detail: 'Flash-fried in light olive oil with fine durum wheat semolina.' },
-    { pos: '0.05m 0.02m 0.04m', norm: '0.8m 0.5m 0m', title: 'Amalfi Lemon & Herbs', detail: 'Bright citrus zest and crispy wild parsley garnish.' },
-    { pos: '-0.05m 0.03m -0.02m', norm: '-1m 0.5m 0m', title: 'Garlic Tartar Dip', detail: 'House-made creamy aioli with capers, dill, and roasted garlic.' }
+    { pos: '0 0.05 0.02',    norm: '0 1 0.2',   tag: 'CRISP',   label: 'Golden Semolina Crust' },
+    { pos: '0.05 0.02 0.03', norm: '0.7 0.3 0.5', tag: 'FRESH',  label: 'Tender Calamari Rings' },
+    { pos: '-0.04 0.02 -0.03',norm: '-0.6 0.3 -0.5', tag: 'ZEST', label: 'Amalfi Lemon & Herbs' }
   ]
 };
 
@@ -968,10 +671,10 @@ const I18N = {
         portion: 'Actual portion size', footer: 'Tap any dish to view in 3D · Prices in ₹ · 🌿 Vegetarian friendly',
         footer2: 'AR requires a compatible mobile device · Model size reflects actual portion', arReady: '✦ AR Ready',
         s1: 'Scan', s2: 'Place', s3: 'Experience', showcase: "Chef's Showcase", scroll: 'Scroll to explore',
-        hp1: 'Table preview at real size', hp2: '3D Ingredient Hotspots', hp3: 'Multi-Dish Feast & Snap',
-        footer3: 'AI + AR: every dish is a 3D model you can zoom, inspect ingredients, combine into a Full Table Feast & share.',
-        arNote: 'Tap glowing 3D pins to inspect ingredients, or place on your table in AR.',
-        arChip: 'AR + 3D Pins', ftAR: 'Place it on your table at real size', ftAI: 'Tap 3D pins & build your feast',
+        hp1: 'Table preview at real size', hp2: 'Dish recommendations', hp3: 'Zoom into every dish',
+        footer3: 'AI + AR: every dish is a 3D model you can zoom, place on your table and match to your taste.',
+        arNote: 'Place a true-to-scale 3D model on your table before you order.',
+        arChip: 'AR preview', ftAR: 'Place it on your table at real size', ftAI: 'Matches dishes to your taste',
         aiLPick: "AI highlight: today's chef pick, popular with guests who like similar dishes.",
         aiLNew: 'AI highlight: new on the menu, suggested to guests who like to try something different.',
         aiLVeg: 'AI tag: vegetarian-friendly, so it appears first when you filter by diet.',
@@ -980,19 +683,17 @@ const I18N = {
         aiLDessert: 'AI pairing: a sweet finish that suits the end of your meal.',
         aiLGen: 'AI match: recommended from guest taste patterns.',
         aiSPick: 'Chef pick', aiSNew: 'New for you', aiSVeg: 'Veg-tagged', aiSGen: 'Taste match',
-        zoomIn: 'Zoom in', zoomOut: 'Zoom out',
-        addFeast: '+ Feast', inFeast: '✓ In Feast', feastOpen: 'Preview Feast', feastTitle: 'Your Full Table Feast',
-        pinsLabel: 'Pins', snapLabel: 'Snap', snapReady: '📸 Social Card Ready!', maxFeast: 'Up to 4 dishes in 3D Feast table' },
+        zoomIn: 'Zoom in', zoomOut: 'Zoom out' },
   it: { sub: 'Autentica Cucina Italiana', badge: 'Anteprima Interattiva 3D & AR', veg: 'vegetariano', loading: 'Caricamento...',
         search: 'Cerca piatti…', vegOnly: 'Solo veg', empty: 'Nessun piatto trovato', viewAR: 'Vedi in AR', viewTable: 'Vedi sul tavolo',
         launching: 'Caricamento…', launch: 'Avvia AR', retry: 'Riprova', pick: 'scelta dello chef', isNew: 'novità',
         portion: 'Porzione reale', footer: 'Tocca un piatto per vederlo in 3D · Prezzi in ₹ · 🌿 Opzioni vegetariane',
         footer2: 'La AR richiede un dispositivo mobile compatibile · Le dimensioni riflettono la porzione reale', arReady: '✦ AR Pronta',
         s1: 'Scansiona', s2: 'Posiziona', s3: 'Vivi', showcase: 'Vetrina dello Chef', scroll: 'Scorri per esplorare',
-        hp1: 'Anteprima sul tavolo a grandezza reale', hp2: 'Ingredienti 3D interattivi', hp3: 'Tavola Completa & Foto',
-        footer3: 'AI + AR: esplora gli ingredienti in 3D, componi la tua tavola e condividi.',
-        arNote: 'Tocca i pin 3D per scoprire gli ingredienti o posiziona sul tavolo.',
-        arChip: 'AR + Pin 3D', ftAR: 'Posizionalo sul tavolo a grandezza reale', ftAI: 'Abbina i piatti ai tuoi gusti',
+        hp1: 'Anteprima sul tavolo a grandezza reale', hp2: 'Consigli sui piatti', hp3: 'Zoom su ogni piatto',
+        footer3: 'AI + AR: ogni piatto è un modello 3D da ingrandire, posizionare sul tavolo e abbinare ai tuoi gusti.',
+        arNote: 'Posiziona un modello 3D in scala reale sul tuo tavolo prima di ordinare.',
+        arChip: 'Anteprima AR', ftAR: 'Posizionalo sul tavolo a grandezza reale', ftAI: 'Abbina i piatti ai tuoi gusti',
         aiLPick: 'AI: scelta dello chef di oggi, apprezzata da chi ama piatti simili.',
         aiLNew: 'AI: novità del menu, consigliata a chi ama provare cose nuove.',
         aiLVeg: 'AI: opzione vegetariana, appare per prima con il filtro dieta.',
@@ -1001,9 +702,7 @@ const I18N = {
         aiLDessert: 'AI: un dolce finale adatto alla fine del pasto.',
         aiLGen: 'AI: consigliato in base ai gusti degli ospiti.',
         aiSPick: 'Scelta chef', aiSNew: 'Nuovo per te', aiSVeg: 'Veg', aiSGen: 'Per i tuoi gusti',
-        zoomIn: 'Ingrandisci', zoomOut: 'Riduci',
-        addFeast: '+ Tavola', inFeast: '✓ A Tavola', feastOpen: 'Vedi Tavola', feastTitle: 'La Tua Tavola Completa',
-        pinsLabel: 'Pin', snapLabel: 'Foto', snapReady: '📸 Foto Pronta!', maxFeast: 'Massimo 4 piatti sulla tavola 3D' },
+        zoomIn: 'Ingrandisci', zoomOut: 'Riduci' },
   kn: { sub: 'ಅಧಿಕೃತ ಇಟಾಲಿಯನ್ ಆಹಾರ', badge: '3D ಮತ್ತು AR ಮುನ್ನೋಟ', veg: 'ಸಸ್ಯಾಹಾರಿ', loading: 'ಲೋಡ್ ಆಗುತ್ತಿದೆ...',
         search: 'ಖಾದ್ಯಗಳನ್ನು ಹುಡುಕಿ…', vegOnly: 'ಸಸ್ಯಾಹಾರ ಮಾತ್ರ', empty: 'ಯಾವುದೇ ಖಾದ್ಯ ಸಿಗಲಿಲ್ಲ', viewAR: 'AR ನಲ್ಲಿ ನೋಡಿ', viewTable: 'ಟೇಬಲ್ ಮೇಲೆ ನೋಡಿ',
         launching: 'ಲೋಡ್ ಆಗುತ್ತಿದೆ…', launch: 'AR ಆರಂಭಿಸಿ', retry: 'ಮರುಪ್ರಯತ್ನ', pick: 'ಬಾಣಸಿಗರ ಆಯ್ಕೆ', isNew: 'ಹೊಸ',
@@ -1027,7 +726,7 @@ const I18N = {
         launching: 'లోడ్ అవుతోంది…', launch: 'AR ప్రారంభించండి', retry: 'మళ్లీ', pick: 'చెఫ్ ఎంపిక', isNew: 'కొత్త',
         portion: 'అసలు పరిమాణం', footer: '3Dలో చూడటానికి వంటకాన్ని నొక్కండి · ధరలు ₹ · 🌿 శాఖాహారం అందుబాటులో',
         footer2: 'ARకు అనుకూల మొబైల్ అవసరం', arReady: '✦ AR సిద్ధం',
-        s1: 'స్కాన్', s2: 'ఉంచండి', s3: 'అనుభవించండి', showcase: 'చెఫ్ షోకేస్', scroll: 'స్క్రోల్ చేయండి' }
+        s1: 'స్కాన్', s2: 'ఉంచండి', s3: 'అನುభవించండి', showcase: 'చెఫ్ షోకేస్', scroll: 'స్క్రోల్ చేయండి' }
 };
 
 const CAT_LABELS = {
@@ -1038,9 +737,6 @@ const CAT_LABELS = {
 };
 
 let allDishes = [], rawRows = [], activeCategory = 'all', currentLang = 'en', query = '', vegOnly = false;
-let feastIds = []; // Holds up to 4 dish IDs for the Full Table Feast Builder
-let activeModalDish = null, activeFeastDish = null, pinsVisible = true;
-
 const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const canHover = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
@@ -1052,16 +748,6 @@ const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 const lerp = (a, b, t) => a + (b - a) * t;
 const ease = t => t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
 
-let toastTimer = null;
-function showToast(msg) {
-  const el = $('ld-toast');
-  el.textContent = msg;
-  el.classList.add('show');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => el.classList.remove('show'), 2600);
-}
-
-/* AI notes */
 function aiLong(d) {
   const t = T();
   if (d.dotd) return t.aiLPick;
@@ -1080,46 +766,35 @@ function aiShort(d) {
 function normalizeKey(str) { return (str || '').toLowerCase().replace(/\s+/g, '-').trim(); }
 
 function getLocalAssets(dishName) {
-  const entry = LOCAL_ASSETS[normalizeKey(dishName)];
-  if (!entry) return { posterPath: '', glbPath: '', usdzPath: '', scale: 0.05 };
+  const key = normalizeKey(dishName);
+  const entry = LOCAL_ASSETS[key];
+  if (!entry) return { key, posterPath: '', glbPath: '', usdzPath: '', scale: 0.05, hotspots: [] };
   const base = `${ASSETS_BASE}/${entry.folder}/${entry.file}`;
-  return { posterPath: `${base}.png`, glbPath: `${base}.glb`, usdzPath: `${base}.usdz`, scale: entry.scale };
-}
-
-/* Builds 3D Ingredient Hotspots from HOTSPOTS_MAP or optional CSV column */
-function getDishHotspots(rawName, rowHotspots, desc) {
-  const key = normalizeKey(rawName);
-  if (HOTSPOTS_MAP[key]) return HOTSPOTS_MAP[key];
-  if (rowHotspots) {
-    return rowHotspots.split(';').map((part, i) => {
-      const [title, detail] = part.split(':').map(s => s.trim());
-      const angles = [['0m 0.06m 0.03m','0m 1m 0m'], ['0.05m 0.03m 0.02m','1m 0.5m 0m'], ['-0.05m 0.03m 0.02m','-1m 0.5m 0m']];
-      const [pos, norm] = angles[i % angles.length];
-      return { pos, norm, title: title || 'Chef Highlight', detail: detail || desc };
-    });
-  }
-  return [
-    { pos: '0m 0.06m 0.03m', norm: '0m 1m 0m', title: 'Artisanal Preparation', detail: desc || 'Crafted fresh to order by Chef Giuseppe.' },
-    { pos: '0.05m 0.03m -0.02m', norm: '1m 0.5m 0m', title: 'Imported Italian Produce', detail: 'Authentic D.O.P. certified ingredients & herbs.' }
-  ];
+  return {
+    key,
+    posterPath: `${base}.png`,
+    glbPath: `${base}.glb`,
+    usdzPath: `${base}.usdz`,
+    scale: entry.scale,
+    hotspots: DISH_HOTSPOTS[key] || []
+  };
 }
 
 function rowToDish(row, idx) {
   const truthy = v => ['true', 'yes', '1'].includes((v || '').toLowerCase());
   const lang = currentLang === 'en' ? '' : `_${currentLang}`;
   const local = getLocalAssets(row['name']);
-  const desc = row[`description${lang}`] || row['description'] || '';
   return {
     id: row['id'] || `dish-${idx}`,
-    rawName: row['name'] || '',
+    key: local.key,
     name: row[`name${lang}`] || row['name'] || '',
     category: (row['category'] || 'other').toLowerCase().trim().replace(/\s+/g, '-'),
-    desc,
+    desc: row[`description${lang}`] || row['description'] || '',
     price: parseInt(row['price'] || '0', 10) || 0,
     veg: truthy(row['veg']), available: truthy(row['available']), isNew: truthy(row['new']), dotd: truthy(row['dotd']),
     glbPath: local.glbPath, usdzPath: local.usdzPath, posterPath: local.posterPath, scale: local.scale,
-    emoji: EMOJI_MAP[normalizeKey(row['name'])] || '🍽️',
-    hotspots: getDishHotspots(row['name'], row['hotspots'], desc)
+    hotspots: local.hotspots,
+    emoji: EMOJI_MAP[local.key] || '🍽️'
   };
 }
 
@@ -1158,18 +833,73 @@ function catLabel(cat) {
   return map ? (map[currentLang] || map.en) : (cat.charAt(0).toUpperCase() + cat.slice(1).replace(/-/g, ' '));
 }
 
+/* ───────────── SPRING SLIDING PILL FOR CATEGORY TABS ───────────── */
+let lastPillX = 0;
+function moveTabPill(animate = true) {
+  const wrap = $('tabs-inner');
+  const pill = $('tab-pill');
+  const activeBtn = wrap ? wrap.querySelector(`.tab-btn[data-cat="${activeCategory}"]`) : null;
+  if (!pill || !activeBtn) return;
+
+  const targetX = activeBtn.offsetLeft;
+  const targetW = activeBtn.offsetWidth;
+  const deltaX = Math.abs(targetX - lastPillX);
+  lastPillX = targetX;
+
+  if (!animate || reduceMotion) {
+    pill.style.transition = 'none';
+    wrap.style.setProperty('--px', `${targetX}px`);
+    wrap.style.setProperty('--pw', `${targetW}px`);
+    wrap.style.setProperty('--psx', '1');
+    wrap.style.setProperty('--psy', '1');
+    requestAnimationFrame(() => { pill.style.transition = ''; });
+  } else {
+    // Liquid droplet stretch proportional to travel distance
+    const stretchX = 1 + Math.min(deltaX * 0.0012, 0.18);
+    const stretchY = 1 - Math.min(deltaX * 0.0006, 0.10);
+    wrap.style.setProperty('--px', `${targetX}px`);
+    wrap.style.setProperty('--pw', `${targetW}px`);
+    wrap.style.setProperty('--psx', stretchX.toFixed(3));
+    wrap.style.setProperty('--psy', stretchY.toFixed(3));
+    clearTimeout(pill._stretchTimer);
+    pill._stretchTimer = setTimeout(() => {
+      wrap.style.setProperty('--psx', '1');
+      wrap.style.setProperty('--psy', '1');
+    }, 220);
+  }
+
+  const scrollTarget = targetX - (wrap.clientWidth - targetW) / 2;
+  wrap.scrollTo({ left: scrollTarget, behavior: animate && !reduceMotion ? 'smooth' : 'auto' });
+}
+
 function renderTabs() {
   const cats = ['all', 'starter', 'main-course', 'dessert'];
   const wrap = $('tabs-inner');
-  wrap.innerHTML = cats.map(c => `<button class="tab-btn${c === activeCategory ? ' active' : ''}" data-cat="${c}">${esc(catLabel(c))}</button>`).join('');
-  wrap.querySelectorAll('.tab-btn').forEach(btn => btn.addEventListener('click', () => { activeCategory = btn.dataset.cat; renderTabs(); renderItems(); jumpToCategory(activeCategory); }));
+  if (!wrap.querySelector('#tab-pill') || wrap.dataset.lang !== currentLang) {
+    wrap.dataset.lang = currentLang;
+    wrap.innerHTML = `<span class="tab-pill" id="tab-pill" aria-hidden="true"></span>` +
+      cats.map(c => `<button class="tab-btn${c === activeCategory ? ' active' : ''}" data-cat="${c}">${esc(catLabel(c))}</button>`).join('');
+    wrap.querySelectorAll('.tab-btn').forEach(btn =>
+      btn.addEventListener('click', () => {
+        activeCategory = btn.dataset.cat;
+        renderTabs();
+        renderItems();
+        jumpToCategory(activeCategory);
+      })
+    );
+    requestAnimationFrame(() => moveTabPill(false));
+  } else {
+    wrap.querySelectorAll('.tab-btn').forEach(btn =>
+      btn.classList.toggle('active', btn.dataset.cat === activeCategory)
+    );
+    moveTabPill(true);
+  }
 }
 
 const SVG_CUBE = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>`;
 
 function cardHTML(d) {
   const t = T();
-  const inFeast = feastIds.includes(d.id);
   const thumb = d.posterPath
     ? `<img src="${esc(d.posterPath)}" alt="${esc(d.name)}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><span style="display:none">${d.emoji}</span>`
     : `<span>${d.emoji}</span>`;
@@ -1190,10 +920,7 @@ function cardHTML(d) {
           </div>
           <div class="card-footer">
             <div class="dish-price"><span class="price-sym">₹</span>${d.price.toLocaleString('en-IN')}</div>
-            <div class="card-actions">
-              <button class="feast-add-btn${inFeast ? ' added' : ''}" data-feast-id="${esc(d.id)}" type="button">${esc(inFeast ? t.inFeast : t.addFeast)}</button>
-              ${d.glbPath ? `<button class="ar-btn" data-id="${esc(d.id)}" type="button">${SVG_CUBE}${esc(t.viewAR)}</button>` : ''}
-            </div>
+            ${d.glbPath ? `<button class="ar-btn" data-id="${esc(d.id)}" type="button">${SVG_CUBE}${esc(t.viewAR)}</button>` : ''}
           </div>
         </div>
       </article>
@@ -1238,360 +965,36 @@ function renderItems() {
     bindCardTilt(card);
   });
   container.querySelectorAll('.ar-btn').forEach(btn => btn.addEventListener('click', e => { e.stopPropagation(); openModal(btn.dataset.id); }));
-  container.querySelectorAll('[data-feast-id]').forEach(btn => btn.addEventListener('click', e => {
-    e.stopPropagation();
-    toggleFeastDish(btn.dataset.feastId);
-  }));
-  update();
+  requestUpdate();
 }
 
-/* ───────────── FEATURE 1: INJECT 3D HOTSPOTS INTO MODEL-VIEWER ───────────── */
-function injectHotspots(mv, dish) {
-  if (!dish.hotspots || !dish.hotspots.length) return;
-  dish.hotspots.forEach((h, idx) => {
+/* Helper to inject 3D Ingredient Hotspots into any <model-viewer> */
+function injectHotspots(mv, d, alwaysVisible = false) {
+  if (!d.hotspots || !d.hotspots.length) return;
+  if (alwaysVisible) mv.style.setProperty('--hs-vis', '1');
+  d.hotspots.forEach((h, idx) => {
     const btn = document.createElement('button');
-    btn.className = 'Hotspot';
-    btn.setAttribute('slot', `hotspot-ing-${idx}`);
+    btn.type = 'button';
+    btn.className = 'mv-hotspot';
+    btn.setAttribute('slot', `hotspot-${idx + 1}`);
     btn.setAttribute('data-position', h.pos);
     btn.setAttribute('data-normal', h.norm);
-    btn.setAttribute('data-visibility-attribute', 'visible');
-    btn.type = 'button';
-    btn.innerHTML = `
-      <span class="Hotspot-dot"></span>
-      <span class="Hotspot-title">${esc(h.title)}</span>
-      <div class="Hotspot-Popover">
-        <strong>${esc(h.title)}</strong>
-        <span>${esc(h.detail)}</span>
-      </div>
-    `;
+    btn.innerHTML = `<span class="hs-dot"></span><span class="hs-tag">${esc(h.tag)}</span><span class="hs-title">${esc(h.label)}</span>`;
     btn.addEventListener('click', e => {
       e.stopPropagation();
-      const wasActive = btn.classList.contains('active');
-      mv.querySelectorAll('.Hotspot').forEach(el => el.classList.remove('active'));
-      if (!wasActive) {
-        btn.classList.add('active');
-        mv.cameraTarget = h.pos;
-      } else {
-        mv.cameraTarget = 'auto auto auto';
-      }
+      // Gently orbit camera toward this ingredient when clicked
+      const [x, , z] = h.pos.split(' ').map(Number);
+      const deg = (Math.atan2(x, z) * 180 / Math.PI).toFixed(1);
+      mv.cameraOrbit = `${deg}deg 68deg 70%`;
     });
     mv.appendChild(btn);
   });
 }
 
-/* ───────────── FEATURE 2: FULL TABLE FEAST BUILDER LOGIC ───────────── */
-function toggleFeastDish(id) {
-  const t = T();
-  const idx = feastIds.indexOf(id);
-  if (idx >= 0) {
-    feastIds.splice(idx, 1);
-  } else {
-    if (feastIds.length >= 4) {
-      showToast(t.maxFeast);
-      return;
-    }
-    feastIds.push(id);
-  }
-  if (navigator.vibrate) navigator.vibrate(12);
-  syncFeastUI();
-}
-
-function syncFeastUI() {
-  const t = T();
-  // Update card buttons
-  document.querySelectorAll('[data-feast-id]').forEach(btn => {
-    const added = feastIds.includes(btn.dataset.feastId);
-    btn.classList.toggle('added', added);
-    btn.textContent = added ? t.inFeast : t.addFeast;
-  });
-  // Update stage button
-  const stageDish = showList[showIdx];
-  if (stageDish && $('sc-feast-btn')) {
-    const added = feastIds.includes(stageDish.id);
-    $('sc-feast-btn').classList.toggle('added', added);
-    $('sc-feast-btn').textContent = added ? t.inFeast : t.addFeast;
-  }
-  // Update modal button
-  if (activeModalDish && $('modal-feast-btn')) {
-    const added = feastIds.includes(activeModalDish.id);
-    $('modal-feast-btn').classList.toggle('added', added);
-    $('modal-feast-btn').textContent = added ? t.inFeast : t.addFeast;
-  }
-  // Update bottom floating tray
-  const tray = $('feast-tray');
-  const dishes = feastIds.map(id => allDishes.find(d => d.id === id)).filter(Boolean);
-  if (!dishes.length) {
-    tray.classList.remove('visible');
-    return;
-  }
-  tray.classList.add('visible');
-  $('feast-avatars').innerHTML = dishes.map(d =>
-    `<div class="feast-avatar">${d.posterPath ? `<img src="${esc(d.posterPath)}" alt="${esc(d.name)}">` : d.emoji}</div>`
-  ).join('');
-  const total = dishes.reduce((s, d) => s + d.price, 0);
-  $('feast-meta-title').textContent = dishes.map(d => d.name).join(' + ');
-  $('feast-meta-sub').textContent = `${dishes.length} ${dishes.length === 1 ? 'dish' : 'dishes'} · ₹${total.toLocaleString('en-IN')}`;
-}
-
-function openFeastModal() {
-  const dishes = feastIds.map(id => allDishes.find(d => d.id === id)).filter(Boolean);
-  if (!dishes.length) return;
-  activeFeastDish = dishes[0];
-
-  const disc = $('feast-table-disc');
-  disc.innerHTML = '';
-
-  // Coordinates around the circular 3D dining table for 1, 2, 3, or 4 dishes
-  const layouts = {
-    1: [[50, 50]],
-    2: [[30, 52], [70, 52]],
-    3: [[50, 27], [28, 68], [72, 68]],
-    4: [[30, 32], [70, 32], [30, 70], [70, 70]]
-  };
-  const coords = layouts[dishes.length] || layouts[4];
-
-  dishes.forEach((d, idx) => {
-    const slot = document.createElement('div');
-    slot.className = 'feast-slot' + (idx === 0 ? ' active-slot' : '');
-    slot.style.left = coords[idx][0] + '%';
-    slot.style.top  = coords[idx][1] + '%';
-    slot.dataset.id = d.id;
-
-    if (d.glbPath) {
-      const mv = document.createElement('model-viewer');
-      mv.setAttribute('src', d.glbPath);
-      if (isIOS && d.usdzPath) mv.setAttribute('ios-src', d.usdzPath);
-      const s = (d.scale ?? 0.25).toFixed(6);
-      mv.setAttribute('scale', `${s} ${s} ${s}`);
-      mv.setAttribute('ar', '');
-      mv.setAttribute('ar-modes', 'webxr scene-viewer quick-look');
-      mv.setAttribute('ar-placement', 'floor');
-      mv.setAttribute('ar-scale', 'fixed');
-      mv.setAttribute('camera-controls', '');
-      mv.setAttribute('auto-rotate', '');
-      mv.setAttribute('camera-orbit', `${idx * 45}deg 68deg 115%`);
-      mv.setAttribute('shadow-intensity', '1');
-      mv.setAttribute('environment-image', 'neutral');
-      mv.setAttribute('interaction-prompt', 'none');
-      slot.appendChild(mv);
-    } else {
-      slot.innerHTML = `<div style="width:100%;height:100%;display:grid;place-items:center;font-size:48px;">${d.emoji}</div>`;
-    }
-
-    const lbl = document.createElement('div');
-    lbl.className = 'feast-slot-label';
-    lbl.textContent = d.name;
-    slot.appendChild(lbl);
-
-    slot.addEventListener('click', () => selectFeastSlot(d.id));
-    disc.appendChild(slot);
-  });
-
-  renderFeastChips();
-  $('feast-overlay').classList.add('open');
-  document.body.style.overflow = 'hidden';
-}
-
-function selectFeastSlot(id) {
-  const d = allDishes.find(x => x.id === id);
-  if (!d) return;
-  activeFeastDish = d;
-  $('feast-table-disc').querySelectorAll('.feast-slot').forEach(el => {
-    el.classList.toggle('active-slot', el.dataset.id === id);
-  });
-  renderFeastChips();
-}
-
-function renderFeastChips() {
-  const dishes = feastIds.map(id => allDishes.find(d => d.id === id)).filter(Boolean);
-  const bar = $('feast-chips-bar');
-  bar.innerHTML = dishes.map(d => `
-    <div class="feast-chip${activeFeastDish && activeFeastDish.id === d.id ? ' active' : ''}" data-select-id="${esc(d.id)}">
-      <span>${d.emoji} ${esc(d.name)} · ₹${d.price}</span>
-      <button type="button" data-remove-id="${esc(d.id)}" aria-label="Remove">✕</button>
-    </div>
-  `).join('');
-
-  bar.querySelectorAll('[data-select-id]').forEach(chip => {
-    chip.addEventListener('click', () => selectFeastSlot(chip.dataset.selectId));
-  });
-  bar.querySelectorAll('[data-remove-id]').forEach(btn => {
-    btn.addEventListener('click', e => {
-      e.stopPropagation();
-      toggleFeastDish(btn.dataset.removeId);
-      if (!feastIds.length) closeFeastModal();
-      else openFeastModal();
-    });
-  });
-
-  const total = dishes.reduce((s, d) => s + d.price, 0);
-  $('feast-total-price').innerHTML = `<span class="price-sym">₹</span>${total.toLocaleString('en-IN')}`;
-  $('feast-count-note').textContent = `${dishes.length} Dish Table Combination`;
-}
-
-function closeFeastModal() {
-  $('feast-overlay').classList.remove('open');
-  document.body.style.overflow = '';
-  $('feast-table-disc').innerHTML = '';
-}
-
-$('feast-open-btn').addEventListener('click', openFeastModal);
-$('feast-clear-btn').addEventListener('click', () => { feastIds = []; syncFeastUI(); });
-$('feast-close').addEventListener('click', closeFeastModal);
-$('feast-overlay').addEventListener('click', e => { if (e.target === $('feast-overlay')) closeFeastModal(); });
-$('feast-launch-ar').addEventListener('click', () => {
-  if (!activeFeastDish) return;
-  const slotMv = $('feast-table-disc').querySelector(`.feast-slot[data-id="${activeFeastDish.id}"] model-viewer`);
-  if (slotMv && typeof slotMv.activateAR === 'function') {
-    try { slotMv.activateAR(); return; } catch (e) { console.warn(e); }
-  }
-  closeFeastModal();
-  openModal(activeFeastDish.id);
-});
-
-/* ───────────── FEATURE 3: AR SNAP & SHARE (VIRAL MARKETING CARD) ───────────── */
-async function snapAndShareDish(dish, mvElement, isFeast = false) {
-  const t = T();
-  showToast('✨ Creating Pinocchio Social Card…');
-
-  const canvas = document.createElement('canvas');
-  canvas.width = 1080;
-  canvas.height = 1350;
-  const ctx = canvas.getContext('2d');
-
-  // 1. Luxury Royal Crimson & Gold Background
-  const bgGrad = ctx.createRadialGradient(540, 520, 90, 540, 675, 850);
-  bgGrad.addColorStop(0, '#c0121a');
-  bgGrad.addColorStop(0.55, '#6c060b');
-  bgGrad.addColorStop(1, '#2a0406');
-  ctx.fillStyle = bgGrad;
-  ctx.fillRect(0, 0, 1080, 1350);
-
-  // Decorative Double Gold Frame
-  ctx.strokeStyle = '#d9b25f';
-  ctx.lineWidth = 4;
-  ctx.strokeRect(44, 44, 992, 1262);
-  ctx.strokeStyle = 'rgba(246, 224, 163, 0.35)';
-  ctx.lineWidth = 1.5;
-  ctx.strokeRect(60, 60, 960, 1230);
-
-  // 2. Header Branding
-  ctx.fillStyle = '#f6e0a3';
-  ctx.textAlign = 'center';
-  ctx.font = '600 24px Outfit, sans-serif';
-  ctx.fillText('CUCINA ITALIANA · AR MENU EXPERIENCE', 540, 130);
-
-  ctx.fillStyle = '#ffffff';
-  ctx.font = '700 84px "Playfair Display", serif';
-  ctx.fillText('PINOCCHIO', 540, 225);
-
-  ctx.fillStyle = '#d9b25f';
-  ctx.font = 'italic 34px "Playfair Display", serif';
-  ctx.fillText('by Chef Giuseppe', 540, 275);
-
-  // 3. Capture 3D Model Snapshot or Dish Poster Image
-  let imgSource = null;
-  if (mvElement && typeof mvElement.toBlob === 'function') {
-    try {
-      const blob = await mvElement.toBlob({ idealAspect: true });
-      imgSource = await createImageBitmap(blob);
-    } catch (e) { console.warn('Model snapshot fallback to poster:', e); }
-  }
-  if (!imgSource && dish && dish.posterPath) {
-    try {
-      const img = new Image();
-      img.crossOrigin = 'anonymous';
-      img.src = dish.posterPath;
-      await new Promise((res, rej) => { img.onload = res; img.onerror = rej; });
-      imgSource = img;
-    } catch (e) {}
-  }
-
-  // Draw glowing halo behind dish
-  const haloGrad = ctx.createRadialGradient(540, 640, 30, 540, 640, 310);
-  haloGrad.addColorStop(0, 'rgba(248, 229, 171, 0.35)');
-  haloGrad.addColorStop(1, 'rgba(248, 229, 171, 0)');
-  ctx.fillStyle = haloGrad;
-  ctx.beginPath();
-  ctx.arc(540, 640, 310, 0, Math.PI * 2);
-  ctx.fill();
-
-  if (imgSource) {
-    const targetSize = 580;
-    const ratio = Math.min(targetSize / imgSource.width, targetSize / imgSource.height);
-    const w = imgSource.width * ratio;
-    const h = imgSource.height * ratio;
-    ctx.drawImage(imgSource, 540 - w / 2, 640 - h / 2, w, h);
-  } else {
-    ctx.font = '220px sans-serif';
-    ctx.fillText(dish ? dish.emoji : '🍽️', 540, 700);
-  }
-
-  // 4. Dish Name, AI Note & Price Pill
-  const titleText = isFeast ? 'My Full Table Feast' : (dish ? dish.name : 'Chef Special');
-  ctx.fillStyle = '#ffffff';
-  ctx.font = '700 54px "Playfair Display", serif';
-  ctx.fillText(titleText.slice(0, 32), 540, 1030);
-
-  const subText = isFeast
-    ? feastIds.map(id => allDishes.find(d => d.id === id)?.name).filter(Boolean).join(' · ')
-    : (dish ? aiShort(dish) + ' · Interactive 3D & AR Dish' : '');
-  ctx.fillStyle = '#f6e0a3';
-  ctx.font = '500 26px Inter, sans-serif';
-  ctx.fillText(subText.slice(0, 55), 540, 1085);
-
-  const priceVal = isFeast
-    ? feastIds.map(id => allDishes.find(d => d.id === id)?.price || 0).reduce((a, b) => a + b, 0)
-    : (dish ? dish.price : 0);
-
-  ctx.fillStyle = '#d9b25f';
-  ctx.beginPath();
-  ctx.roundRect(390, 1125, 300, 74, 37);
-  ctx.fill();
-
-  ctx.fillStyle = '#4a0508';
-  ctx.font = '800 38px Outfit, sans-serif';
-  ctx.fillText(`₹${priceVal.toLocaleString('en-IN')}`, 540, 1175);
-
-  // 5. Footer Watermark
-  ctx.fillStyle = 'rgba(255,255,255,0.75)';
-  ctx.font = '600 22px Outfit, sans-serif';
-  ctx.fillText('Powered by LiveDish-AI · 3D WebAR Hospitality', 540, 1265);
-
-  canvas.toBlob(async blob => {
-    if (!blob) return;
-    const fileName = `${normalizeKey(titleText) || 'pinocchio-dish'}-ar.png`;
-    const file = new File([blob], fileName, { type: 'image/png' });
-
-    if (navigator.canShare && navigator.canShare({ files: [file] })) {
-      try {
-        await navigator.share({
-          title: `${titleText} — Pinocchio 3D AR Menu`,
-          text: `Check out ${titleText} in 3D & AR at Pinocchio by Chef Giuseppe! 🍝✨`,
-          files: [file]
-        });
-        showToast(t.snapReady);
-        return;
-      } catch (err) {
-        if (err.name === 'AbortError') return;
-      }
-    }
-    // Fallback download
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = fileName;
-    a.click();
-    setTimeout(() => URL.revokeObjectURL(url), 3000);
-    showToast(t.snapReady);
-  }, 'image/png');
-}
-
-/* ───────────── MODAL + AR + ZOOM + HOTSPOTS ───────────── */
+/* ───────────── MODAL + AR + ZOOM ───────────── */
 function openModal(id) {
   const d = allDishes.find(x => x.id === id);
   if (!d) return;
-  activeModalDish = d;
   const t = T();
   $('modal-name').textContent = d.name;
   $('modal-desc').textContent = d.desc;
@@ -1605,9 +1008,6 @@ function openModal(id) {
   arBadge.classList.remove('visible');
   arBadge.textContent = t.arReady;
   $('scale-info').textContent = d.glbPath ? t.portion : '';
-  $('mv-pins-btn').style.display = 'none';
-
-  syncFeastUI();
 
   const vw = $('modal-viewer-wrap');
   vw.querySelectorAll('.modal-photo, model-viewer, .mv-ar-btn-wrap, .mv-zoom-col').forEach(el => el.remove());
@@ -1626,34 +1026,12 @@ function openModal(id) {
     arBtnWrap.style.cssText = 'position:absolute;bottom:18px;left:50%;transform:translateX(-50%);z-index:6;display:flex;gap:10px;align-items:center;';
     arBtnWrap.innerHTML = `<button class="modal-ar-launch-btn" type="button">${SVG_CUBE}${esc(t.viewTable)}</button>`;
     vw.insertBefore(arBtnWrap, arBadge);
-    // Auto-load interactive 3D model + ingredient hotspots immediately so user can inspect pins right away
-    loadModelAndAR(d, vw, arBadge, arBtnWrap, photoWrap, false);
+    arBtnWrap.querySelector('.modal-ar-launch-btn').addEventListener('click', () => loadModelAndAR(d, vw, arBadge, arBtnWrap, photoWrap));
   }
 
   $('modal-overlay').classList.add('open');
   document.body.style.overflow = 'hidden';
 }
-
-$('modal-feast-btn').addEventListener('click', () => {
-  if (activeModalDish) toggleFeastDish(activeModalDish.id);
-});
-
-$('mv-pins-btn').addEventListener('click', () => {
-  pinsVisible = !pinsVisible;
-  $('mv-pins-btn').classList.toggle('active', pinsVisible);
-  const mv = document.querySelector('#modal-viewer-wrap model-viewer');
-  if (mv) mv.classList.toggle('hide-hotspots', !pinsVisible);
-});
-
-$('mv-snap-btn').addEventListener('click', () => {
-  const mv = document.querySelector('#modal-viewer-wrap model-viewer');
-  if (activeModalDish) snapAndShareDish(activeModalDish, mv, false);
-});
-
-$('feast-snap-btn').addEventListener('click', () => {
-  const mv = document.querySelector('#feast-table-disc .feast-slot.active-slot model-viewer');
-  snapAndShareDish(activeFeastDish, mv, true);
-});
 
 function addModalZoom(mv, vw, arBadge) {
   const t = T();
@@ -1669,7 +1047,7 @@ function addModalZoom(mv, vw, arBadge) {
   col.querySelector('[data-z="out"]').addEventListener('click', () => zoomBy(1.33));
 }
 
-function loadModelAndAR(d, vw, arBadge, arBtnWrap, photoWrap, autoActivateAR = false) {
+function loadModelAndAR(d, vw, arBadge, arBtnWrap, photoWrap) {
   const t = T();
   const btn = arBtnWrap.querySelector('.modal-ar-launch-btn');
   btn.disabled = true;
@@ -1698,34 +1076,31 @@ function loadModelAndAR(d, vw, arBadge, arBtnWrap, photoWrap, autoActivateAR = f
   mv.setAttribute('loading', 'eager');
   mv.setAttribute('reveal', 'auto');
   mv.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;background:transparent;touch-action:pan-y pinch-zoom;z-index:-1;opacity:0;pointer-events:none;';
-
-  // Inject 3D Ingredient Hotspots into this model-viewer instance
-  injectHotspots(mv, d);
+  injectHotspots(mv, d, true);
   vw.insertBefore(mv, arBadge);
 
   mv.addEventListener('load', () => {
     photoWrap.style.display = 'none';
     mv.style.zIndex = '2'; mv.style.opacity = '1'; mv.style.pointerEvents = 'auto';
     arBadge.classList.add('visible');
-    $('mv-pins-btn').style.display = 'inline-flex';
-    pinsVisible = true;
-    $('mv-pins-btn').classList.add('active');
-
     arBtnWrap.style.display = 'flex';
     btn.disabled = false;
-    btn.innerHTML = `${SVG_CUBE}${esc(t.viewTable)}`;
+    btn.innerHTML = `${SVG_CUBE}${esc(t.launch)}`;
     btn.onclick = () => { try { mv.activateAR(); } catch (e) { console.warn(e); } };
     addModalZoom(mv, vw, arBadge);
 
-    if (autoActivateAR) {
-      mv.activateAR();
-    }
+    mv.activateAR();
+    mv.addEventListener('ar-status', e => {
+      if (e.detail.status === 'failed' || e.detail.status === 'not-presenting') {
+        btn.disabled = false; btn.innerHTML = `${SVG_CUBE}${esc(t.viewAR)}`;
+      }
+    }, { once: true });
   });
 
   mv.addEventListener('error', () => {
     btn.disabled = false;
     btn.innerHTML = `⚠ ${esc(t.retry)}`;
-    btn.onclick = () => { mv.remove(); loadModelAndAR(d, vw, arBadge, arBtnWrap, photoWrap, true); };
+    btn.onclick = () => { mv.remove(); loadModelAndAR(d, vw, arBadge, arBtnWrap, photoWrap); };
     mv.remove();
   });
 }
@@ -1746,7 +1121,7 @@ document.addEventListener('visibilitychange', () => {
 });
 $('modal-close').addEventListener('click', closeModal);
 $('modal-overlay').addEventListener('click', e => { if (e.target === $('modal-overlay')) closeModal(); });
-document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeModal(); closeFeastModal(); } });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
 
 /* ───────────── MENU FILTERS PLACEMENT ───────────── */
 const controlsEl = document.querySelector('.controls');
@@ -1756,7 +1131,109 @@ function placeControls(inStage) {
   if (!inStage && controlsEl.parentElement === stageEl) $('showcase').after(controlsEl);
 }
 
-/* ───────────── ZOOM-THROUGH SHOWCASE ───────────── */
+/* ───────────── ATMOSPHERIC STEAM & GOLD BOKEH CANVAS ENGINE ───────────── */
+const atmoCanvas = $('atmo-canvas');
+const atmoCtx = atmoCanvas.getContext('2d');
+let atmoMode = 'steam'; // 'steam' for hot savoury dishes, 'bokeh' for desserts
+let atmoParticles = [];
+let atmoW = 0, atmoH = 0;
+
+function resizeAtmo() {
+  const sb = $('stage-body');
+  if (!sb) return;
+  const r = sb.getBoundingClientRect();
+  atmoW = Math.max(1, r.width);
+  atmoH = Math.max(1, r.height);
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  atmoCanvas.width = atmoW * dpr;
+  atmoCanvas.height = atmoH * dpr;
+  atmoCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+
+function makeParticle(randomY = false) {
+  const cx = atmoW * 0.5;
+  const cy = atmoH * 0.58;
+  if (atmoMode === 'steam') {
+    return {
+      x: cx + (Math.random() - 0.5) * Math.min(atmoW * 0.34, 170),
+      y: randomY ? cy - Math.random() * atmoH * 0.42 : cy + (Math.random() - 0.5) * 24,
+      r: 18 + Math.random() * 26,
+      vy: 0.45 + Math.random() * 0.55,
+      freq: 0.015 + Math.random() * 0.02,
+      amp: 0.4 + Math.random() * 0.7,
+      phase: Math.random() * Math.PI * 2,
+      life: randomY ? Math.random() : 0,
+      speed: 0.004 + Math.random() * 0.004
+    };
+  } else {
+    return {
+      x: cx + (Math.random() - 0.5) * Math.min(atmoW * 0.68, 340),
+      y: randomY ? Math.random() * atmoH * 0.85 : cy + (Math.random() - 0.3) * atmoH * 0.35,
+      r: 2 + Math.random() * 4.5,
+      vx: (Math.random() - 0.5) * 0.28,
+      vy: -0.18 - Math.random() * 0.32,
+      phase: Math.random() * Math.PI * 2,
+      twinkle: 0.03 + Math.random() * 0.05,
+      life: randomY ? Math.random() : 0,
+      speed: 0.003 + Math.random() * 0.004
+    };
+  }
+}
+
+function initAtmoParticles(mode) {
+  atmoMode = mode;
+  resizeAtmo();
+  const count = mode === 'steam' ? 24 : 34;
+  atmoParticles = Array.from({ length: count }, () => makeParticle(true));
+}
+
+function tickAtmoParticles() {
+  if (reduceMotion || !showList.length || !atmoW) return;
+  const sec = $('showcase');
+  const r = sec.getBoundingClientRect();
+  if (r.bottom < 0 || r.top > window.innerHeight) return;
+
+  atmoCtx.clearRect(0, 0, atmoW, atmoH);
+  for (let i = 0; i < atmoParticles.length; i++) {
+    const p = atmoParticles[i];
+    p.life += p.speed;
+    p.phase += p.freq || p.twinkle || 0.02;
+    if (p.life >= 1) {
+      atmoParticles[i] = makeParticle(false);
+      continue;
+    }
+    const env = Math.sin(p.life * Math.PI); // Smooth fade-in and fade-out
+    if (atmoMode === 'steam') {
+      p.y -= p.vy;
+      p.x += Math.sin(p.phase) * p.amp;
+      p.r += 0.14;
+      const alpha = env * 0.22;
+      const grad = atmoCtx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r);
+      grad.addColorStop(0, `rgba(255, 252, 245, ${alpha.toFixed(3)})`);
+      grad.addColorStop(0.55, `rgba(248, 229, 171, ${(alpha * 0.45).toFixed(3)})`);
+      grad.addColorStop(1, 'rgba(255, 252, 245, 0)');
+      atmoCtx.fillStyle = grad;
+      atmoCtx.beginPath();
+      atmoCtx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      atmoCtx.fill();
+    } else {
+      p.x += p.vx + Math.sin(p.phase * 0.7) * 0.15;
+      p.y += p.vy;
+      const shimmer = 0.55 + 0.45 * Math.sin(p.phase);
+      const alpha = env * shimmer * 0.75;
+      const grad = atmoCtx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r * 2.2);
+      grad.addColorStop(0, `rgba(255, 250, 220, ${alpha.toFixed(3)})`);
+      grad.addColorStop(0.45, `rgba(217, 178, 95, ${(alpha * 0.65).toFixed(3)})`);
+      grad.addColorStop(1, 'rgba(217, 178, 95, 0)');
+      atmoCtx.fillStyle = grad;
+      atmoCtx.beginPath();
+      atmoCtx.arc(p.x, p.y, p.r * 2.2, 0, Math.PI * 2);
+      atmoCtx.fill();
+    }
+  }
+}
+
+/* ───────────── ZOOM-THROUGH SHOWCASE + 3D HOTSPOTS ───────────── */
 const CAT_ORDER = ['starter', 'main-course', 'dessert'];
 const catRank = c => { const i = CAT_ORDER.indexOf(c); return i < 0 ? 99 : i; };
 let syncLock = 0;
@@ -1789,13 +1266,15 @@ function renderShowcase() {
       exposure: '1.1', 'environment-image': 'neutral', 'interaction-prompt': 'none', 'disable-zoom': '', 'disable-pan': '',
       loading: 'eager', reveal: 'auto', 'interpolation-decay': '50'
     }).forEach(([k, v]) => mv.setAttribute(k, v));
+    injectHotspots(mv, d, false);
     stack.appendChild(mv);
     return mv;
   });
   $('sc-dots').innerHTML = showList.map((d, i) => `<button type="button" class="dot" data-i="${i}" aria-label="${esc(d.name)}"></button>`).join('');
   $('sc-dots').querySelectorAll('.dot').forEach(b => b.addEventListener('click', () => scrollToShow(+b.dataset.i)));
   showIdx = -1;
-  update();
+  resizeAtmo();
+  requestUpdate();
 }
 
 function scrollToShow(i) {
@@ -1819,6 +1298,10 @@ function setShowDish(idx) {
   if (activeCategory !== 'all' && d.category !== activeCategory && Date.now() > syncLock) {
     activeCategory = d.category; renderTabs(); renderItems();
   }
+  // Switch atmospheric particle physics based on dish category
+  const nextAtmo = d.category === 'dessert' ? 'bokeh' : 'steam';
+  if (nextAtmo !== atmoMode || !atmoParticles.length) initAtmoParticles(nextAtmo);
+
   $('sc-count').textContent = `${String(idx + 1).padStart(2, '0')} / ${String(n).padStart(2, '0')}`;
   $('sc-cat').textContent = catLabel(d.category);$('sc-name').textContent = d.name;
   $('sc-desc').textContent = d.desc;
@@ -1828,18 +1311,20 @@ function setShowDish(idx) {
   $('sc-ai-t').textContent = aiLong(d);$('ft-ar-t').textContent = t.ftAR;
   $('ft-ai-t').textContent = aiShort(d) + ' · ' + t.ftAI;
   $('sc-dots').querySelectorAll('.dot').forEach((b, i) => b.classList.toggle('active', i === idx));
-  syncFeastUI();
   const sw = $('sc-swap'); sw.classList.remove('pop'); void sw.offsetWidth; sw.classList.add('pop');
 }
 
-function updateShowcase() {
+function updateShowcase(virtualY) {
   if (!showList.length || showMVs.length !== showList.length) return;
   const sec = $('showcase');
-  const r = sec.getBoundingClientRect(), vh = window.innerHeight;
-  if (r.top > vh * 1.5 || r.bottom < -vh * 0.5) return;
+  const vh = window.innerHeight;
+  const secTop = sec.offsetTop - virtualY;
+  const secHeight = sec.offsetHeight;
+  if (secTop > vh * 1.5 || secTop + secHeight < -vh * 0.5) return;
+
   const n = showList.length;
-  const span = Math.max(1, r.height - vh);
-  const p = clamp(-r.top / span, 0, 1);
+  const span = Math.max(1, secHeight - vh);
+  const p = clamp(-secTop / span, 0, 1);
   sec.style.setProperty('--rot', (p * 540).toFixed(1) + 'deg');
   const f = p * (n - 0.4);
   const idx = clamp(Math.floor(f + 0.2), 0, n - 1);
@@ -1855,10 +1340,18 @@ function updateShowcase() {
       else if (u < 0.6) { rad = lerp(130, 75, u / 0.6); op = 1; }
       else              { const t = (u - 0.6) / 0.4; rad = lerp(75, 26, t * t); op = 1 - ease(t); }
     }
+    const effRad = rad * showZoom;
     mv.style.opacity = op.toFixed(3);
     mv.style.visibility = op > 0.01 ? 'visible' : 'hidden';
     mv.style.zIndex = u >= 0 ? 2 : 1;
-    if (op > 0.01) mv.cameraOrbit = `${(-40 + clamp(u, -0.4, 1) * 200).toFixed(1)}deg 72deg ${(rad * showZoom).toFixed(1)}%`;
+    mv.style.pointerEvents = (i === idx && op > 0.6) ? 'auto' : 'none';
+
+    if (op > 0.01) {
+      mv.cameraOrbit = `${(-40 + clamp(u, -0.4, 1) * 200).toFixed(1)}deg 72deg ${effRad.toFixed(1)}%`;
+      // Reveal 3D ingredient hotspots smoothly when camera zooms closer than 98%
+      const hsVis = op > 0.55 ? clamp((98 - effRad) / 22, 0, 1) : 0;
+      mv.style.setProperty('--hs-vis', hsVis.toFixed(3));
+    }
   });
 
   const drift = ((f - Math.floor(f)) - .5) * 36;
@@ -1866,13 +1359,26 @@ function updateShowcase() {
   $('ft-ai').style.transform = `translateY(${drift.toFixed(1)}px)`;
 }
 
-$('sc-ar').addEventListener('click', () => { const d = showList[showIdx]; if (d) openModal(d.id); });$('sc-feast-btn').addEventListener('click', () => { const d = showList[showIdx]; if (d) toggleFeastDish(d.id); });
+$('sc-ar').addEventListener('click', () => { const d = showList[showIdx]; if (d) openModal(d.id); });
 
-/* ───────────── SCROLL ENGINE ───────────── */
-const heroEl = $('hero'), progressEl =$('progress');
-let ticking = false, heroH = 600, scrollFrac = 0, mouseX = 0, mouseY = 0;
+/* ───────────── INERTIAL SMOOTH SCROLL + VELOCITY SKEW ENGINE ───────────── */
+const heroEl = $('hero'), progressEl = $('progress'), itemsContainerEl =$('items-container');
+let ticking = false, heroH = 600, mouseX = 0, mouseY = 0;
+let targetY = window.scrollY, smoothY = window.scrollY, smoothVel = 0;
+const LERP_FACTOR = 0.095; // Silk-like inertial damping
 
-function updateCards(vh) {
+function updateCards(vh, scrollDelta) {
+  // Apply GPU-composited Velocity Skew, Stretch & 3D Aerodynamic Pitch
+  const skew = clamp(scrollDelta * 0.13, -5.5, 5.5);
+  const rx   = clamp(scrollDelta * -0.24, -11, 11);
+  const sy   = 1 + clamp(Math.abs(scrollDelta) * 0.0014, 0, 0.065);
+  const sx   = 1 - (sy - 1) * 0.35;
+
+  itemsContainerEl.style.setProperty('--v-skew', skew.toFixed(2) + 'deg');
+  itemsContainerEl.style.setProperty('--v-rx',   rx.toFixed(2) + 'deg');
+  itemsContainerEl.style.setProperty('--v-sy',   sy.toFixed(3));
+  itemsContainerEl.style.setProperty('--v-sx',   sx.toFixed(3));
+
   document.querySelectorAll('.menu-card').forEach(c => {
     const cell = c.parentElement;
     const r = cell.getBoundingClientRect();
@@ -1888,22 +1394,57 @@ function updateCards(vh) {
 
 function update() {
   ticking = false;
-  const y = window.scrollY, vh = window.innerHeight;
-  const max = Math.max(1, document.documentElement.scrollHeight - vh);
-  scrollFrac = clamp(y / max, 0, 1);
-  progressEl.style.transform = `scaleX(${scrollFrac.toFixed(4)})`;
-  if (!reduceMotion) {
-    heroEl.style.setProperty('--hp', clamp(y / (heroH * 0.85), 0, 1).toFixed(4));
-    updateCards(vh);
+  targetY = window.scrollY;
+  const vh = window.innerHeight;
+
+  if (reduceMotion) {
+    smoothY = targetY;
+    smoothVel = 0;
+  } else {
+    const prevSmooth = smoothY;
+    smoothY += (targetY - smoothY) * LERP_FACTOR;
+    if (Math.abs(targetY - smoothY) < 0.08) smoothY = targetY;
+    const rawVel = targetY - prevSmooth;
+    smoothVel += (rawVel * 0.22 - smoothVel) * 0.18;
   }
-  updateShowcase();
+
+  const max = Math.max(1, document.documentElement.scrollHeight - vh);
+  const scrollFrac = clamp(smoothY / max, 0, 1);
+  progressEl.style.transform = `scaleX(${scrollFrac.toFixed(4)})`;
+
+  if (!reduceMotion) {
+    heroEl.style.setProperty('--hp', clamp(smoothY / (heroH * 0.85), 0, 1).toFixed(4));
+    updateCards(vh, smoothVel);
+  }
+  updateShowcase(smoothY);
+
+  // Keep inertial loop running until scroll & velocity settle
+  if (Math.abs(targetY - smoothY) > 0.1 || Math.abs(smoothVel) > 0.08) {
+    requestUpdate();
+  }
 }
+
 function requestUpdate() { if (!ticking) { ticking = true; requestAnimationFrame(update); } }
-function measure() { heroH = heroEl.offsetHeight || 600; requestUpdate(); }
+function measure() {
+  heroH = heroEl.offsetHeight || 600;
+  resizeAtmo();
+  moveTabPill(false);
+  requestUpdate();
+}
+
+/* Continuous ambient loop for the Steam / Gold Bokeh particles */
+function ambientLoop() {
+  tickAtmoParticles();
+  requestAnimationFrame(ambientLoop);
+}
 
 window.addEventListener('scroll', requestUpdate, { passive: true });
 window.addEventListener('resize', measure);
-window.addEventListener('load', measure);
+window.addEventListener('load', () => {
+  smoothY = targetY = window.scrollY;
+  measure();
+  if (!reduceMotion) requestAnimationFrame(ambientLoop);
+});
 window.addEventListener('pointermove', e => {
   mouseX = (e.clientX / window.innerWidth - 0.5) * 2;
   mouseY = (e.clientY / window.innerHeight - 0.5) * 2;
@@ -1919,28 +1460,23 @@ $('search').addEventListener('input', e => { query = e.target.value; renderItems
 
 function applyUIText() {
   const t = T();
-  $('ui-sub-tag').textContent    = t.sub;
-  $('ui-ar-badge').textContent   = t.badge;
-  $('ui-loading').textContent    = t.loading;
-  $('ui-veg-only').textContent   = t.vegOnly;
-  $('ui-footer').textContent     = t.footer;
-  $('ui-footer-2').textContent   = t.footer2;
-  $('ui-footer-3').textContent   = t.footer3;
-  $('ui-step-1').textContent     = t.s1;
-  $('ui-step-2').textContent     = t.s2;
-  $('ui-step-3').textContent     = t.s3;
-  $('ui-hp1').textContent        = t.hp1;
-  $('ui-hp2').textContent        = t.hp2;
-  $('ui-hp3').textContent        = t.hp3;
-  $('ui-scroll').textContent     = t.scroll;
-  $('ui-feast-open').textContent = t.feastOpen;
-  $('ui-feast-title').textContent= t.feastTitle;
-  $('ui-pins-toggle').textContent= t.pinsLabel;
-  $('ui-snap-btn').textContent   = t.snapLabel;
+  $('ui-sub-tag').textContent  = t.sub;
+  $('ui-ar-badge').textContent = t.badge;
+  $('ui-loading').textContent  = t.loading;
+  $('ui-veg-only').textContent = t.vegOnly;
+  $('ui-footer').textContent   = t.footer;
+  $('ui-footer-2').textContent = t.footer2;
+  $('ui-footer-3').textContent = t.footer3;
+  $('ui-step-1').textContent   = t.s1;
+  $('ui-step-2').textContent   = t.s2;
+  $('ui-step-3').textContent   = t.s3;
+  $('ui-hp1').textContent      = t.hp1;
+  $('ui-hp2').textContent      = t.hp2;
+  $('ui-hp3').textContent      = t.hp3;
+  $('ui-scroll').textContent   = t.scroll;
   $('z-in').setAttribute('aria-label', t.zoomIn);$('z-out').setAttribute('aria-label', t.zoomOut);
-  $('sc-ar').innerHTML           = SVG_CUBE + esc(t.viewAR);$('search').placeholder        = t.search;
-  document.documentElement.lang  = currentLang;
-  syncFeastUI();
+  $('sc-ar').innerHTML         = SVG_CUBE + esc(t.viewAR);$('search').placeholder      = t.search;
+  document.documentElement.lang = currentLang;
 }
 
 $('lang-select').addEventListener('change', e => {
