@@ -2,275 +2,229 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>Explore Japan · Sakura Dining</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Explore Japan · Pinocchio</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="preconnect" href="https://unpkg.com">
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 
-<script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+<!-- Pinned version (was unpinned "latest") -->
+<script type="module" src="https://unpkg.com/@google/model-viewer@4.0.0/dist/model-viewer.min.js"></script>
 
 <style>
 :root{
---ink:#080604;
---paper:#F0E8D5;
---gold:#B8973A;
---gold2:#D4AE52;
---ff-en:'Cormorant Garamond',serif;
---ff-ui:'DM Sans',sans-serif;
+  /* Theme sampled from the Pinocchio screenshot */
+  --bg:#F0E2B8;
+  --cream:#FDF0D0;
+  --cream2:#FBE6B0;
+  --crimson:#8B0A1A;
+  --red:#C8202F;
+  --red-dark:#7A0A18;
+  --gold:#B8923A;
+  --line:rgba(139,10,26,.22);
+  --ff-display:'Playfair Display',Georgia,serif;
+  --ff-ui:'Inter',system-ui,sans-serif;
 }
 *{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
 body{
-background:var(--ink);
-color:var(--paper);
-font-family:var(--ff-ui);
-height:100svh;
-overflow:hidden;
-display:flex;
-flex-direction:column;
+  background:var(--bg);
+  color:var(--crimson);
+  font-family:var(--ff-ui);
+  height:100svh;
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
 }
 
 .back-btn{
-position:fixed;
-left:16px;
-top:max(env(safe-area-inset-top),14px);
-z-index:100;
-text-decoration:none;
-color:var(--paper);
-background:rgba(255,255,255,.08);
-padding:10px 16px;
-border-radius:30px;
-border:1px solid rgba(255,255,255,.15);
-backdrop-filter:blur(12px);
-font-size:11px;
+  position:fixed;
+  left:16px;
+  top:max(env(safe-area-inset-top),14px);
+  z-index:100;
+  text-decoration:none;
+  color:var(--crimson);
+  background:var(--cream);
+  padding:10px 16px;
+  border-radius:30px;
+  box-shadow:0 6px 18px rgba(139,10,26,.15);
+  font-size:12px;
+  font-weight:600;
 }
+.back-btn:focus-visible,.action-btn:focus-visible{outline:2px solid var(--red);outline-offset:2px}
 
 .nav-header{
-padding:max(env(safe-area-inset-top),20px) 20px 16px;
-text-align:center;
-border-bottom:1px solid rgba(184,151,58,.2);
+  padding:max(env(safe-area-inset-top),20px) 20px 16px;
+  text-align:center;
+  border-bottom:1px solid var(--line);
 }
 .nav-header h1{
-font-family:var(--ff-en);
-font-size:clamp(28px,6vw,40px);
-color:var(--gold2);
-letter-spacing:.08em;
+  font-family:var(--ff-display);
+  font-weight:700;
+  font-size:clamp(28px,6vw,40px);
+  color:var(--crimson);
+  letter-spacing:.06em;
 }
 .nav-header p{
-margin-top:6px;
-font-size:10px;
-letter-spacing:.28em;
-text-transform:uppercase;
-opacity:.6;
+  margin-top:6px;
+  font-size:11px;
+  letter-spacing:.24em;
+  text-transform:uppercase;
+  color:var(--gold);
+  font-weight:600;
 }
 
 .explorer-grid{
-flex:1;
-display:flex;
-align-items:center;
-gap:18px;
-padding:20px 16px;
-overflow-x:auto;
-overflow-y:hidden;
-scroll-snap-type:x mandatory;
-scrollbar-width:none;
+  flex:1;
+  display:flex;
+  align-items:center;
+  gap:18px;
+  padding:20px 16px;
+  overflow-x:auto;
+  overflow-y:hidden;
+  scroll-snap-type:x mandatory;
+  scrollbar-width:none;
 }
 .explorer-grid::-webkit-scrollbar{display:none}
 
 .landmark-card{
-flex:0 0 min(85vw,360px);
-height:min(64vh,540px);
-background:#0f0c09;
-border:1px solid rgba(184,151,58,.25);
-border-radius:18px;
-overflow:hidden;
-display:flex;
-flex-direction:column;
-scroll-snap-align:center;
+  flex:0 0 min(85vw,360px);
+  height:min(64vh,540px);
+  background:linear-gradient(160deg,var(--cream),var(--cream2));
+  border:1px solid rgba(255,255,255,.7);
+  box-shadow:0 18px 40px rgba(139,10,26,.14);
+  border-radius:28px;
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+  scroll-snap-align:center;
 }
 
 .model-wrap{
-flex:1;
-position:relative;
-overflow:hidden;
-background:radial-gradient(circle at center,#1b160c 0%,#080604 100%);
+  flex:1;
+  position:relative;
+  overflow:hidden;
+  background:radial-gradient(circle at center,#FFF6DD 0%,#F3DFAE 100%);
 }
-
 .model-poster{
-position:absolute;
-inset:0;
-width:100%;
-height:100%;
-object-fit:cover;
-z-index:1;
-transition:.45s;
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  z-index:1;
+  transition:opacity .45s;
 }
-.model-wrap.model-active .model-poster{
-opacity:0;
-pointer-events:none;
-}
+.model-wrap.model-active .model-poster{opacity:0;pointer-events:none}
+.model-wrap.poster-missing .model-poster{display:none}
 
 model-viewer{
-position:absolute;
-inset:0;
-width:100%;
-height:100%;
-opacity:0;
-pointer-events:none;
-transition:.4s;
-z-index:2;
---poster-color:transparent;
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .4s;
+  z-index:2;
+  --poster-color:transparent;
 }
-.model-wrap.model-active model-viewer{
-opacity:1;
-pointer-events:auto;
-}
-
+.model-wrap.model-active model-viewer{opacity:1;pointer-events:auto}
 model-viewer::part(default-progress-bar),
 model-viewer::part(default-ar-button){display:none}
 
 .pinch-hint{
-position:absolute;
-bottom:12px;
-left:50%;
-transform:translateX(-50%);
-background:rgba(8,6,4,.8);
-border:1px solid rgba(184,151,58,.35);
-padding:7px 14px;
-border-radius:30px;
-font-size:9px;
-letter-spacing:.12em;
-color:var(--gold2);
-z-index:10;
-opacity:0;
-white-space:nowrap;
+  position:absolute;
+  bottom:12px;
+  left:50%;
+  transform:translateX(-50%);
+  background:var(--crimson);
+  color:var(--cream);
+  padding:7px 14px;
+  border-radius:30px;
+  font-size:10px;
+  letter-spacing:.08em;
+  z-index:10;
+  opacity:0;
+  white-space:nowrap;
 }
-.model-wrap.model-active .pinch-hint{
-opacity:1;
-animation:fadeout 4s ease 2s forwards;
-}
+.model-wrap.model-active .pinch-hint{opacity:1;animation:fadeout 4s ease 2s forwards}
 @keyframes fadeout{to{opacity:0}}
 
 .ar-badge{
-position:absolute;
-right:12px;
-top:12px;
-padding:6px 12px;
-border-radius:30px;
-font-size:9px;
-background:rgba(8,6,4,.8);
-border:1px solid var(--gold);
-color:var(--gold2);
-opacity:0;
-transform:translateY(-8px);
-transition:.4s;
-z-index:8;
+  position:absolute;
+  right:12px;
+  top:12px;
+  padding:6px 12px;
+  border-radius:30px;
+  font-size:10px;
+  font-weight:600;
+  background:var(--cream);
+  border:1px solid var(--gold);
+  color:var(--crimson);
+  opacity:0;
+  transform:translateY(-8px);
+  transition:.4s;
+  z-index:8;
 }
-.ar-badge.visible{
-opacity:1;
-transform:translateY(0)
-}
+.ar-badge.visible{opacity:1;transform:translateY(0)}
 
 .ar-loading{
-position:absolute;
-inset:0;
-display:none;
-align-items:center;
-justify-content:center;
-flex-direction:column;
-gap:12px;
-background:rgba(8,6,4,.85);
-z-index:20;
+  position:absolute;
+  inset:0;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  flex-direction:column;
+  gap:12px;
+  background:rgba(253,240,208,.92);
+  z-index:20;
 }
 .ar-loading.show{display:flex}
-
 .loader-ring{
-width:42px;
-height:42px;
-border-radius:50%;
-border:2px solid rgba(184,151,58,.15);
-border-top-color:var(--gold2);
-animation:spin .9s linear infinite;
+  width:42px;height:42px;border-radius:50%;
+  border:2px solid rgba(139,10,26,.15);
+  border-top-color:var(--red);
+  animation:spin .9s linear infinite;
 }
 @keyframes spin{to{transform:rotate(360deg)}}
+.loader-bar-track{width:110px;height:3px;background:rgba(139,10,26,.15);border-radius:10px;overflow:hidden}
+.loader-bar-fill{height:100%;width:0;background:var(--red)}
+.loader-label{font-size:11px;letter-spacing:.14em;text-transform:uppercase;font-weight:600}
 
-.loader-bar-track{
-width:110px;
-height:3px;
-background:rgba(184,151,58,.18);
-border-radius:10px;
-overflow:hidden;
-}
-.loader-bar-fill{
-height:100%;
-width:0;
-background:var(--gold2);
-}
-.loader-label{
-font-size:10px;
-letter-spacing:.18em;
-text-transform:uppercase;
-}
+.landmark-info{padding:16px;background:rgba(255,248,230,.7);border-top:1px solid var(--line)}
+.landmark-name{font-family:var(--ff-display);font-weight:600;font-size:26px;margin-bottom:4px;color:var(--crimson)}
+.landmark-city{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);font-weight:600;margin-bottom:14px}
 
-.landmark-info{
-padding:16px;
-background:#11100d;
-}
-.landmark-name{
-font-family:var(--ff-en);
-font-size:28px;
-margin-bottom:4px;
-}
-.landmark-city{
-font-size:10px;
-letter-spacing:.18em;
-text-transform:uppercase;
-color:var(--gold);
-margin-bottom:14px;
-}
-
-.btn-row{
-display:flex;gap:8px}
+.btn-row{display:flex;gap:8px}
 .action-btn{
-border:none;
-border-radius:10px;
-padding:13px;
-font-size:11px;
-font-weight:600;
-letter-spacing:.1em;
-text-transform:uppercase;
-min-height:46px;
-cursor:pointer;
+  border:none;
+  border-radius:999px;
+  padding:13px 16px;
+  font-family:var(--ff-ui);
+  font-size:12px;
+  font-weight:600;
+  letter-spacing:.06em;
+  min-height:46px;
+  cursor:pointer;
 }
-.view3d-btn{
-background:rgba(184,151,58,.14);
-color:var(--gold2);
-border:1px solid rgba(184,151,58,.35);
-}
-.view3d-btn.is-active{
-background:rgba(184,151,58,.25)
-}
+.action-btn:disabled{opacity:.55;cursor:not-allowed}
+.view3d-btn{background:var(--cream);color:var(--crimson);border:1px solid var(--line)}
+.view3d-btn.is-active{background:var(--cream2);border-color:var(--crimson)}
 .ar-btn{
-flex:1;
-background:linear-gradient(135deg,var(--gold),var(--gold2));
-color:#000;
+  flex:1;
+  background:linear-gradient(135deg,var(--red),var(--red-dark));
+  color:var(--cream);
+  box-shadow:0 8px 18px rgba(139,10,26,.28);
 }
 
-.scroll-dots{
-display:flex;
-justify-content:center;
-gap:8px;
-padding:12px 0 max(env(safe-area-inset-bottom),14px);
-}
-.dot{
-width:6px;height:6px;border-radius:50%;
-background:rgba(184,151,58,.25)
-}
-.dot.active{
-background:var(--gold2);
-transform:scale(1.35)
+.scroll-dots{display:flex;justify-content:center;gap:8px;padding:12px 0 max(env(safe-area-inset-bottom),14px)}
+.dot{width:6px;height:6px;border-radius:50%;background:rgba(139,10,26,.22);transition:.2s}
+.dot.active{background:var(--red);transform:scale(1.35)}
+
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
 }
 </style>
 </head>
@@ -279,8 +233,8 @@ transform:scale(1.35)
 <a href="FunZone.html" class="back-btn">← Back</a>
 
 <div class="nav-header">
-<h1>Explore Japan</h1>
-<p>Augmented Reality Landmarks</p>
+  <h1>Explore Japan</h1>
+  <p>Augmented Reality Landmarks</p>
 </div>
 
 <div class="explorer-grid" id="grid"></div>
@@ -288,192 +242,173 @@ transform:scale(1.35)
 
 <script>
 const landmarks=[
-{name:'Tokyo Skytree',city:'Tokyo',folder:'tokyoskytree',file:'tokyoskytree',hasUsdz:true},
-{name:'Japanese Torii Gate',city:'Japan',folder:'Japanese Torii Gate',file:'Japanese Torii Gate',hasUsdz:true},
-{name:'Japanese Castle',city:'Japan',folder:'japanesecastle',file:'japanesecastle',hasUsdz:true},
-{name:'Nijo Castle',city:'Kyoto',folder:'Nijo Castle japan',file:'Nijo Castle japan',hasUsdz:false},
-{name:'Pagoda',city:'Japan',folder:'pagoda',file:'pagoda',hasUsdz:true},
-{name:'Kimono Dress',city:'Japan',folder:'dress',file:'dress',hasUsdz:true}
+  {name:'Tokyo Skytree',city:'Tokyo',folder:'tokyoskytree',file:'tokyoskytree',hasUsdz:true},
+  {name:'Japanese Torii Gate',city:'Japan',folder:'Japanese Torii Gate',file:'Japanese Torii Gate',hasUsdz:true},
+  {name:'Japanese Castle',city:'Japan',folder:'japanesecastle',file:'japanesecastle',hasUsdz:true},
+  {name:'Nijo Castle',city:'Kyoto',folder:'Nijo Castle japan',file:'Nijo Castle japan',hasUsdz:false},
+  {name:'Pagoda',city:'Japan',folder:'pagoda',file:'pagoda',hasUsdz:true},
+  {name:'Kimono Dress',city:'Japan',folder:'dress',file:'dress',hasUsdz:true}
 ];
 
 const grid=document.getElementById('grid');
 const dotsEl=document.getElementById('dots');
 
 const isIOS=/iPhone|iPad|iPod/i.test(navigator.userAgent)||
-(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+  (navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+
+/* Encode each path segment so folder/file names with spaces work for
+   <img>, model-viewer, Scene Viewer and iOS Quick Look. */
+const enc=p=>p.split('/').map(encodeURIComponent).join('/');
 
 landmarks.forEach((l,i)=>{
-const base=`ExploreJapan/${l.folder}/${l.file}`;
-const glbPath=`${base}.glb`;
-const usdzPath=`${base}.usdz`;
-const pngPath=`${base}.png`;
+  const base=`ExploreJapan/${l.folder}/${l.file}`;
+  const glbPath=enc(`${base}.glb`);
+  const usdzPath=enc(`${base}.usdz`);
+  const pngPath=enc(`${base}.png`);
 
-const card=document.createElement('div');
-card.className='landmark-card';
+  const card=document.createElement('div');
+  card.className='landmark-card';
+  card.innerHTML=`
+  <div class="model-wrap" id="wrap-${i}">
+    <img class="model-poster" src="${pngPath}" alt="${l.name}" onerror="this.parentElement.classList.add('poster-missing')">
 
-card.innerHTML=`
-<div class="model-wrap" id="wrap-${i}">
+    <model-viewer
+      id="mv-${i}"
+      src="${glbPath}"
+      ${isIOS&&l.hasUsdz?`ios-src="${usdzPath}"`:''}
+      ar
+      ar-modes="${isIOS?'quick-look webxr':'scene-viewer webxr'}"
+      ar-placement="floor"
+      ar-scale="auto"
+      loading="${i===0?'eager':'lazy'}"
+      reveal="auto"
+      environment-image="neutral"
+      shadow-intensity="1.2"
+      shadow-softness="0.8"
+      exposure="1.1"
+      camera-controls
+      touch-action="none"
+      min-camera-orbit="auto auto 8%"
+      max-camera-orbit="auto auto 900%"
+      field-of-view="18deg"
+      interpolation-decay="200"
+      interaction-prompt="none"
+      alt="3D model of ${l.name}">
+    </model-viewer>
 
-<img class="model-poster" src="${pngPath}" alt="${l.name}">
+    <div class="ar-loading" id="arload-${i}">
+      <div class="loader-ring"></div>
+      <div class="loader-bar-track"><div class="loader-bar-fill" id="bar-${i}"></div></div>
+      <div class="loader-label" id="lbl-${i}">Loading model...</div>
+    </div>
 
-<model-viewer
-id="mv-${i}"
-src="${glbPath}"
-${isIOS&&l.hasUsdz?`ios-src="${usdzPath}"`:''}
-ar
-ar-modes="${isIOS?'quick-look webxr':'scene-viewer webxr'}"
-ar-placement="floor"
+    <div class="ar-badge" id="badge-${i}">✦ AR Ready</div>
+    <div class="pinch-hint">Pinch to zoom · Drag to rotate</div>
+  </div>
 
-ar-scale="auto"
+  <div class="landmark-info">
+    <div class="landmark-name">${l.name}</div>
+    <div class="landmark-city">${l.city}</div>
+    <div class="btn-row">
+      <button class="action-btn view3d-btn" id="v3dbtn-${i}" onclick="toggle3D(${i})">⬡ 3D</button>
+      <button class="action-btn ar-btn" id="arbtn-${i}" onclick="launchAR(${i})">🪐 View in Real World</button>
+    </div>
+  </div>`;
+  grid.appendChild(card);
 
-loading="${i===0?'eager':'lazy'}"
-reveal="interaction"
-environment-image="neutral"
-shadow-intensity="1.2"
-shadow-softness="0.8"
-exposure="1.1"
-
-camera-controls
-touch-action="pan-y"
-
-min-camera-orbit="auto auto 8%"
-max-camera-orbit="auto auto 900%"
-field-of-view="18deg"
-interpolation-decay="200"
-interaction-prompt="none">
-</model-viewer>
-
-<div class="ar-loading" id="arload-${i}">
-<div class="loader-ring"></div>
-<div class="loader-bar-track"><div class="loader-bar-fill" id="bar-${i}"></div></div>
-<div class="loader-label" id="lbl-${i}">Loading model...</div>
-</div>
-
-<div class="ar-badge" id="badge-${i}">✦ AR Ready</div>
-<div class="pinch-hint">⟺ Pinch Zoom • Drag Rotate • Scale in AR</div>
-</div>
-
-<div class="landmark-info">
-<div class="landmark-name">${l.name}</div>
-<div class="landmark-city">${l.city}</div>
-<div class="btn-row">
-<button class="action-btn view3d-btn" id="v3dbtn-${i}" onclick="toggle3D(${i})">⬡ 3D</button>
-<button class="action-btn ar-btn" id="arbtn-${i}" onclick="launchAR(${i})">🪐 View in Real World</button>
-</div>
-</div>`;
-
-grid.appendChild(card);
-
-const dot=document.createElement('div');
-dot.className='dot'+(i===0?' active':'');
-dotsEl.appendChild(dot);
+  const dot=document.createElement('div');
+  dot.className='dot'+(i===0?' active':'');
+  dotsEl.appendChild(dot);
 });
 
 const state={};
 
 requestAnimationFrame(()=>{
-landmarks.forEach((l,i)=>{
-const mv=document.getElementById(`mv-${i}`);
-const arload=document.getElementById(`arload-${i}`);
-const bar=document.getElementById(`bar-${i}`);
-const lbl=document.getElementById(`lbl-${i}`);
-const badge=document.getElementById(`badge-${i}`);
-const arbtn=document.getElementById(`arbtn-${i}`);
-const v3dbtn=document.getElementById(`v3dbtn-${i}`);
-const wrap=document.getElementById(`wrap-${i}`);
+  landmarks.forEach((l,i)=>{
+    const $=id=>document.getElementById(`${id}-${i}`);
+    const mv=$('mv'),arload=$('arload'),bar=$('bar'),lbl=$('lbl'),
+          badge=$('badge'),arbtn=$('arbtn'),v3dbtn=$('v3dbtn'),wrap=$('wrap');
 
-state[i]={mv,arload,bar,lbl,badge,arbtn,v3dbtn,wrap,ready:false,loading:false,showing3D:false};
+    state[i]={mv,arload,bar,lbl,badge,arbtn,v3dbtn,wrap,ready:false,loading:false,showing3D:false};
 
-mv.addEventListener('progress',(e)=>{
-const pct=Math.round(e.detail.totalProgress*100);
-bar.style.width=pct+'%';
-lbl.textContent=`Loading ${pct}%`;
-});
+    mv.addEventListener('progress',e=>{
+      const pct=Math.round(e.detail.totalProgress*100);
+      bar.style.width=pct+'%';
+      lbl.textContent=`Loading ${pct}%`;
+    });
 
-mv.addEventListener('load',()=>{
-const s=state[i];
-s.ready=true;
-s.loading=false;
-arload.classList.remove('show');
-badge.classList.add('visible');
-if(s.pending3D){s.pending3D=false;activate3DView(i)}
-if(s.pendingAR){s.pendingAR=false;mv.activateAR()}
-});
+    mv.addEventListener('load',()=>{
+      const s=state[i];
+      s.ready=true;
+      s.loading=false;
+      arload.classList.remove('show');
+      /* Only claim "AR Ready" if this device can actually launch AR */
+      if(mv.canActivateAR) badge.classList.add('visible');
+      if(s.pending3D){s.pending3D=false;activate3DView(i)}
+      if(s.pendingAR){s.pendingAR=false;mv.activateAR()}
+    });
 
-mv.addEventListener('error',()=>{
-arload.classList.remove('show');
-arbtn.disabled=true;
-v3dbtn.disabled=true;
-arbtn.innerHTML='Unavailable';
-});
-});
+    mv.addEventListener('error',()=>{
+      const s=state[i];
+      s.loading=false;
+      s.pending3D=false;
+      s.pendingAR=false;
+      arload.classList.remove('show');
+      arbtn.disabled=true;
+      v3dbtn.disabled=true;
+      arbtn.textContent='Unavailable';
+      console.error('Model failed to load:',mv.src);
+    });
+  });
 });
 
 function activate3DView(i){
-const s=state[i];
-s.showing3D=true;
-s.wrap.classList.add('model-active');
-s.v3dbtn.classList.add('is-active');
-s.v3dbtn.innerHTML='✕ 2D';
-s.wrap.addEventListener('touchstart',stopScrollPropagation,{passive:false});
+  const s=state[i];
+  s.showing3D=true;
+  s.wrap.classList.add('model-active');
+  s.v3dbtn.classList.add('is-active');
+  s.v3dbtn.textContent='✕ 2D';
 }
-
 function deactivate3DView(i){
-const s=state[i];
-s.showing3D=false;
-s.wrap.classList.remove('model-active');
-s.v3dbtn.classList.remove('is-active');
-s.v3dbtn.innerHTML='⬡ 3D';
-s.wrap.removeEventListener('touchstart',stopScrollPropagation);
+  const s=state[i];
+  s.showing3D=false;
+  s.wrap.classList.remove('model-active');
+  s.v3dbtn.classList.remove('is-active');
+  s.v3dbtn.textContent='⬡ 3D';
 }
 
-function stopScrollPropagation(e){
-e.stopPropagation();
+function requestLoad(i){
+  const s=state[i];
+  if(!s.loading){
+    s.loading=true;
+    s.mv.setAttribute('loading','eager');
+    s.arload.classList.add('show');
+  }
 }
 
 function toggle3D(i){
-const s=state[i];
-if(s.showing3D){
-deactivate3DView(i);
-return;
-}
-if(s.ready){
-activate3DView(i);
-}else if(!s.loading){
-s.loading=true;
-s.pending3D=true;
-s.mv.setAttribute('loading','eager');
-s.arload.classList.add('show');
-}else{
-s.pending3D=true;
-}
+  const s=state[i];
+  if(s.showing3D){deactivate3DView(i);return}
+  if(s.ready){activate3DView(i)}
+  else{s.pending3D=true;requestLoad(i)}
 }
 
 function launchAR(i){
-const s=state[i];
-if(s.ready){
-s.mv.activateAR();
-}else if(!s.loading){
-s.loading=true;
-s.pendingAR=true;
-s.mv.setAttribute('loading','eager');
-s.arload.classList.add('show');
-}else{
-s.pendingAR=true;
-}
+  const s=state[i];
+  if(s.ready){s.mv.activateAR()}
+  else{s.pendingAR=true;requestLoad(i)}
 }
 
 const dots=dotsEl.querySelectorAll('.dot');
 grid.addEventListener('scroll',()=>{
-const center=grid.scrollLeft+grid.clientWidth/2;
-let closest=0,minDist=Infinity;
-grid.querySelectorAll('.landmark-card').forEach((card,ci)=>{
-const dist=Math.abs((card.offsetLeft+card.offsetWidth/2)-center);
-if(dist<minDist){minDist=dist;closest=ci;}
-});
-dots.forEach((d,di)=>d.classList.toggle('active',di===closest));
+  const center=grid.scrollLeft+grid.clientWidth/2;
+  let closest=0,minDist=Infinity;
+  grid.querySelectorAll('.landmark-card').forEach((card,ci)=>{
+    const dist=Math.abs((card.offsetLeft+card.offsetWidth/2)-center);
+    if(dist<minDist){minDist=dist;closest=ci}
+  });
+  dots.forEach((d,di)=>d.classList.toggle('active',di===closest));
 },{passive:true});
 </script>
-
 </body>
 </html>
