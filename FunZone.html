@@ -1,142 +1,179 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>FunZone · Sakura Dining</title>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --ink: #080604;
-            --paper: #F0E8D5;
-            --yama: #B8973A;
-            --yama2: #D4AE52;
-            --ff-en: 'Cormorant Garamond', serif;
-            --ff-ui: 'DM Sans', sans-serif;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>FunZone · Pinocchio</title>
 
-        body {
-            margin: 0;
-            padding: 0;
-            background-color: var(--ink);
-            color: var(--paper);
-            font-family: var(--ff-ui);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            overflow: hidden;
-        }
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 
-        /* Subtle Grain Overlay to match your main menu */
-        body::before {
-            content: '';
-            position: fixed;
-            inset: 0;
-            pointer-events: none;
-            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.72' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)' opacity='0.04'/%3E%3C/svg%3E");
-            opacity: 0.5;
-        }
+<style>
+:root{
+  /* Colours sampled from the Pinocchio screenshot */
+  --bg:#F0E2B8;
+  --cream:#FDF0D0;
+  --cream2:#FBE6B0;
+  --crimson:#8B0A1A;
+  --red:#C8202F;
+  --red-dark:#7A0A18;
+  --gold:#B8923A;
+  --line:rgba(139,10,26,.22);
+  --ff-display:'Playfair Display',Georgia,serif;
+  --ff-ui:'Inter',system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{min-height:100%}
+body{
+  background:var(--bg);
+  color:var(--crimson);
+  font-family:var(--ff-ui);
+  min-height:100svh;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:20px;
+  padding:max(env(safe-area-inset-top),24px) 16px max(env(safe-area-inset-bottom),24px);
+}
 
-        .header {
-            text-align: center;
-            margin-bottom: 40px;
-        }
+.card{
+  width:100%;
+  max-width:420px;
+  background:linear-gradient(160deg,var(--cream),var(--cream2));
+  border:1px solid rgba(255,255,255,.7);
+  border-radius:36px;
+  padding:36px 24px 28px;
+  box-shadow:0 24px 50px rgba(139,10,26,.14);
+  text-align:center;
+}
 
-        .header h1 {
-            font-family: var(--ff-en);
-            font-size: 42px;
-            font-weight: 400;
-            letter-spacing: 0.1em;
-            margin: 0;
-            color: var(--yama2);
-        }
+.eyebrow{
+  font-size:11px;
+  font-weight:600;
+  letter-spacing:.32em;
+  text-transform:uppercase;
+  color:var(--red);
+}
+h1{
+  font-family:var(--ff-display);
+  font-weight:700;
+  font-size:clamp(44px,13vw,60px);
+  letter-spacing:.06em;
+  line-height:1.05;
+  margin-top:10px;
+  color:var(--crimson);
+}
+.sub{
+  font-family:var(--ff-display);
+  font-style:italic;
+  font-weight:500;
+  font-size:19px;
+  margin-top:6px;
+}
+.divider{
+  display:flex;align-items:center;justify-content:center;gap:12px;
+  margin:20px auto 24px;
+  width:70%;
+}
+.divider::before,.divider::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--line))}
+.divider::after{transform:scaleX(-1)}
+.divider i{width:9px;height:9px;background:var(--red);transform:rotate(45deg)}
 
-        .header p {
-            font-size: 10px;
-            text-transform: uppercase;
-            letter-spacing: 0.3em;
-            color: rgba(240, 232, 213, 0.4);
-            margin-top: 8px;
-        }
+.menu{display:flex;flex-direction:column;gap:12px;text-align:left}
 
-        .button-container {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            width: 80%;
-            max-width: 300px;
-        }
+.fz-item{
+  display:flex;
+  align-items:center;
+  gap:14px;
+  padding:14px 16px;
+  background:rgba(255,248,230,.75);
+  border:1px solid var(--line);
+  border-radius:22px;
+  color:var(--crimson);
+  text-decoration:none;
+  box-shadow:0 6px 16px rgba(139,10,26,.08);
+  transition:transform .2s ease,box-shadow .2s ease,background .2s ease;
+}
+.fz-item:hover,.fz-item:focus-visible{
+  transform:translateY(-2px);
+  background:#fff8e6;
+  box-shadow:0 12px 24px rgba(139,10,26,.18);
+}
+.fz-item:focus-visible{outline:2px solid var(--red);outline-offset:3px}
+.fz-item:active{transform:translateY(0)}
 
-        .fz-btn {
-            background: rgba(240, 232, 213, 0.05);
-            border: 1px solid rgba(184, 151, 58, 0.3);
-            color: var(--paper);
-            padding: 18px;
-            font-family: var(--ff-ui);
-            font-size: 14px;
-            letter-spacing: 0.1em;
-            text-transform: uppercase;
-            text-decoration: none;
-            text-align: center;
-            border-radius: 4px;
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
+.icon{
+  flex:0 0 52px;
+  height:52px;
+  border-radius:50%;
+  display:grid;
+  place-items:center;
+  background:linear-gradient(135deg,var(--red),var(--red-dark));
+  color:var(--cream2);
+  box-shadow:0 8px 16px rgba(139,10,26,.28);
+  font-family:var(--ff-display);
+  font-size:24px;
+  font-weight:600;
+}
+.icon svg{width:26px;height:26px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 
-        .fz-btn:hover, .fz-btn:active {
-            background: var(--yama);
-            color: var(--ink);
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4);
-        }
+.txt{flex:1;min-width:0}
+.txt strong{display:block;font-size:15px;font-weight:600;letter-spacing:.02em}
+.txt span{display:block;margin-top:2px;font-size:12px;color:var(--gold);font-weight:500}
+.chev{width:18px;height:18px;stroke:var(--crimson);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;opacity:.6}
 
-        .fz-btn.locked {
-            opacity: 0.5;
-            border-style: dashed;
-            cursor: default;
-        }
+.fz-item.locked{
+  border-style:dashed;
+  box-shadow:none;
+  cursor:default;
+}
+.fz-item.locked:hover{transform:none;background:rgba(255,248,230,.75);box-shadow:none}
+.fz-item.locked .icon{background:rgba(139,10,26,.18);box-shadow:none;color:var(--crimson)}
+.fz-item.locked .txt{opacity:.7}
 
-        .fz-btn.locked:active {
-            transform: none;
-        }
+.back-link{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:11px 20px;
+  border-radius:999px;
+  background:linear-gradient(135deg,var(--red),var(--red-dark));
+  color:var(--cream);
+  font-size:13px;font-weight:600;letter-spacing:.04em;
+  text-decoration:none;
+  box-shadow:0 8px 18px rgba(139,10,26,.28);
+}
+.back-link:focus-visible{outline:2px solid var(--crimson);outline-offset:3px}
 
-        .back-link {
-            margin-top: 50px;
-            font-size: 11px;
-            color: var(--yama2);
-            text-decoration: none;
-            border-bottom: 1px solid var(--yama);
-            padding-bottom: 2px;
-            opacity: 0.7;
-        }
-    </style>
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
 </head>
 <body>
 
-    <div class="header">
-        <h1>FunZone</h1>
-        <p>Interactive Experience</p>
-    </div>
+<main class="card">
+  <p class="eyebrow">Cucina Italiana</p>
+  <h1>FunZone</h1>
+  <p class="sub">Play while you wait</p>
+  <div class="divider"><i></i></div>
 
-    <div class="button-container">
-        <a href="ExploreJapan.html" class="fz-btn">
-            ESPLORE JAPAN
-        </a>
+  <nav class="menu" aria-label="FunZone activities">
+    <a class="fz-item" href="ExploreJapan.html">
+      <span class="icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="M12 3 4 7.5v9L12 21l8-4.5v-9L12 3Z"/><path d="m4 7.5 8 4.5 8-4.5M12 12v9"/></svg>
+      </span>
+      <span class="txt"><strong>Explore Japan</strong><span>Landmarks in 3D and AR</span></span>
+      <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
+    </a>
 
-        <div class="button-container">
-            <a href="japanese-scripts.html" class="fz-btn">
-            JAPANESE SCRIPTS
-        </a>
-        </div>
+    <a class="fz-item" href="japanese-scripts.html">
+      <span class="icon" aria-hidden="true">あ</span>
+      <span class="txt"><strong>Japanese Scripts</strong><span>Learn the characters</span></span>
+      <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
+    </a>
+  </nav>
+</main>
 
-        <div class="fz-btn locked">
-            Game 03 (Coming Soon)
-        </div>
-    </div>
-
-    <a href="index.html" class="back-link">Return to Menu</a>
+<a href="index.html" class="back-link">← Return to Menu</a>
 
 </body>
 </html>
