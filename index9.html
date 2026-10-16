@@ -726,7 +726,7 @@ const I18N = {
         launching: 'లోడ్ అవుతోంది…', launch: 'AR ప్రారంభించండి', retry: 'మళ్లీ', pick: 'చెఫ్ ఎంపిక', isNew: 'కొత్త',
         portion: 'అసలు పరిమాణం', footer: '3Dలో చూడటానికి వంటకాన్ని నొక్కండి · ధరలు ₹ · 🌿 శాఖాహారం అందుబాటులో',
         footer2: 'ARకు అనుకూల మొబైల్ అవసరం', arReady: '✦ AR సిద్ధం',
-        s1: 'స్కాన్', s2: 'ఉంచండి', s3: 'అನುభవించండి', showcase: 'చెఫ్ షోకేస్', scroll: 'స్క్రోల్ చేయండి' }
+        s1: 'స్కాన్', s2: 'ఉంచండి', s3: 'అనుభవించండి', showcase: 'చెఫ్ షోకేస్', scroll: 'స్క్రోల్ చేయండి' }
 };
 
 const CAT_LABELS = {
@@ -854,7 +854,6 @@ function moveTabPill(animate = true) {
     wrap.style.setProperty('--psy', '1');
     requestAnimationFrame(() => { pill.style.transition = ''; });
   } else {
-    // Liquid droplet stretch proportional to travel distance
     const stretchX = 1 + Math.min(deltaX * 0.0012, 0.18);
     const stretchY = 1 - Math.min(deltaX * 0.0006, 0.10);
     wrap.style.setProperty('--px', `${targetX}px`);
@@ -968,7 +967,6 @@ function renderItems() {
   requestUpdate();
 }
 
-/* Helper to inject 3D Ingredient Hotspots into any <model-viewer> */
 function injectHotspots(mv, d, alwaysVisible = false) {
   if (!d.hotspots || !d.hotspots.length) return;
   if (alwaysVisible) mv.style.setProperty('--hs-vis', '1');
@@ -982,7 +980,6 @@ function injectHotspots(mv, d, alwaysVisible = false) {
     btn.innerHTML = `<span class="hs-dot"></span><span class="hs-tag">${esc(h.tag)}</span><span class="hs-title">${esc(h.label)}</span>`;
     btn.addEventListener('click', e => {
       e.stopPropagation();
-      // Gently orbit camera toward this ingredient when clicked
       const [x, , z] = h.pos.split(' ').map(Number);
       const deg = (Math.atan2(x, z) * 180 / Math.PI).toFixed(1);
       mv.cameraOrbit = `${deg}deg 68deg 70%`;
@@ -1134,7 +1131,7 @@ function placeControls(inStage) {
 /* ───────────── ATMOSPHERIC STEAM & GOLD BOKEH CANVAS ENGINE ───────────── */
 const atmoCanvas = $('atmo-canvas');
 const atmoCtx = atmoCanvas.getContext('2d');
-let atmoMode = 'steam'; // 'steam' for hot savoury dishes, 'bokeh' for desserts
+let atmoMode = 'steam';
 let atmoParticles = [];
 let atmoW = 0, atmoH = 0;
 
@@ -1202,7 +1199,7 @@ function tickAtmoParticles() {
       atmoParticles[i] = makeParticle(false);
       continue;
     }
-    const env = Math.sin(p.life * Math.PI); // Smooth fade-in and fade-out
+    const env = Math.sin(p.life * Math.PI);
     if (atmoMode === 'steam') {
       p.y -= p.vy;
       p.x += Math.sin(p.phase) * p.amp;
@@ -1298,7 +1295,6 @@ function setShowDish(idx) {
   if (activeCategory !== 'all' && d.category !== activeCategory && Date.now() > syncLock) {
     activeCategory = d.category; renderTabs(); renderItems();
   }
-  // Switch atmospheric particle physics based on dish category
   const nextAtmo = d.category === 'dessert' ? 'bokeh' : 'steam';
   if (nextAtmo !== atmoMode || !atmoParticles.length) initAtmoParticles(nextAtmo);
 
@@ -1348,7 +1344,6 @@ function updateShowcase(virtualY) {
 
     if (op > 0.01) {
       mv.cameraOrbit = `${(-40 + clamp(u, -0.4, 1) * 200).toFixed(1)}deg 72deg ${effRad.toFixed(1)}%`;
-      // Reveal 3D ingredient hotspots smoothly when camera zooms closer than 98%
       const hsVis = op > 0.55 ? clamp((98 - effRad) / 22, 0, 1) : 0;
       mv.style.setProperty('--hs-vis', hsVis.toFixed(3));
     }
@@ -1365,10 +1360,9 @@ $('sc-ar').addEventListener('click', () => { const d = showList[showIdx]; if (d)
 const heroEl = $('hero'), progressEl = $('progress'), itemsContainerEl =$('items-container');
 let ticking = false, heroH = 600, mouseX = 0, mouseY = 0;
 let targetY = window.scrollY, smoothY = window.scrollY, smoothVel = 0;
-const LERP_FACTOR = 0.095; // Silk-like inertial damping
+const LERP_FACTOR = 0.095;
 
 function updateCards(vh, scrollDelta) {
-  // Apply GPU-composited Velocity Skew, Stretch & 3D Aerodynamic Pitch
   const skew = clamp(scrollDelta * 0.13, -5.5, 5.5);
   const rx   = clamp(scrollDelta * -0.24, -11, 11);
   const sy   = 1 + clamp(Math.abs(scrollDelta) * 0.0014, 0, 0.065);
@@ -1418,7 +1412,6 @@ function update() {
   }
   updateShowcase(smoothY);
 
-  // Keep inertial loop running until scroll & velocity settle
   if (Math.abs(targetY - smoothY) > 0.1 || Math.abs(smoothVel) > 0.08) {
     requestUpdate();
   }
@@ -1432,7 +1425,6 @@ function measure() {
   requestUpdate();
 }
 
-/* Continuous ambient loop for the Steam / Gold Bokeh particles */
 function ambientLoop() {
   tickAtmoParticles();
   requestAnimationFrame(ambientLoop);
