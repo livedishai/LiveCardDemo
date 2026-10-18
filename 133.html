@@ -234,7 +234,7 @@
     .dish-price { font-family: var(--f-display); font-size: 25px; font-weight: 700; color: var(--red-700); display: flex; align-items: baseline; gap: 2px; line-height: 1; }
     .price-sym { font: 700 13px var(--f-sans); color: var(--gold-dk); }
 
-    /* UPDATED: "VIEW ON TABLE" GOLD PILL BUTTON */
+    /* "VIEW ON TABLE" GOLD PILL BUTTON */
     .ar-btn {
       display: inline-flex; align-items: center; justify-content: center; gap: 9px;
       background: var(--gold-grad);
@@ -325,6 +325,186 @@
     .modal-price .price-sym { font-size: 18px; }
     .modal-note { font: 600 10.5px var(--f-sans); color: var(--ink-soft); letter-spacing: .1em; text-transform: uppercase; text-align: right; line-height: 1.5; max-width: 150px; }
 
+    /* ───────────── UPGRADED AR SCREEN OVERLAY HUD (WebXR) ───────────── */
+    #global-ar-viewer {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: -1;
+      opacity: 0;
+      pointer-events: none;
+    }
+    #global-ar-viewer.ar-active {
+      z-index: 9999;
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .ar-hud {
+      display: none;
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 10000;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: max(env(safe-area-inset-top), 18px) 20px max(env(safe-area-inset-bottom), 28px);
+    }
+    model-viewer[ar-status="session-started"] .ar-hud,
+    model-viewer[ar-status="object-placed"] .ar-hud {
+      display: flex;
+    }
+    .ar-hud-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      pointer-events: auto;
+    }
+    .ar-dish-pill {
+      background: rgba(20, 4, 5, 0.72);
+      -webkit-backdrop-filter: blur(14px);
+      backdrop-filter: blur(14px);
+      color: #fff;
+      border: 1px solid rgba(217, 178, 95, 0.6);
+      padding: 8px 16px;
+      border-radius: 999px;
+      font: 600 13px var(--f-sans);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+    }
+    .ar-placement-hint {
+      align-self: center;
+      background: rgba(20, 4, 5, 0.78);
+      -webkit-backdrop-filter: blur(12px);
+      backdrop-filter: blur(12px);
+      color: var(--gold-lt);
+      border: 1px solid rgba(217, 178, 95, 0.5);
+      padding: 10px 20px;
+      border-radius: 999px;
+      font: 600 12.5px var(--f-sans);
+      letter-spacing: 0.04em;
+      text-align: center;
+      max-width: 88vw;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.45);
+      transition: opacity 0.35s ease;
+    }
+    model-viewer[ar-status="object-placed"] .ar-placement-hint {
+      opacity: 0;
+    }
+    /* Bottom Bar with 3D Button, Camera Shutter Button, and Captured Item Viewer Button */
+    .ar-bottom-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      width: 100%;
+      max-width: 420px;
+      margin: 0 auto;
+      padding: 12px 22px;
+      border-radius: 999px;
+      background: rgba(20, 4, 5, 0.68);
+      -webkit-backdrop-filter: blur(20px);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55);
+      pointer-events: auto;
+    }
+    .ar-ctl-btn {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      border: 1.5px solid rgba(255, 255, 255, 0.5);
+      background: rgba(255, 255, 255, 0.15);
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      font: 700 10px var(--f-sans);
+      cursor: pointer;
+      transition: transform 0.2s, background 0.2s;
+      overflow: hidden;
+      position: relative;
+    }
+    .ar-ctl-btn:active { transform: scale(0.92); }
+    .ar-ctl-btn svg { width: 22px; height: 22px; stroke: #fff; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .ar-shutter-btn {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      border: 4px solid #fff;
+      background: rgba(255, 255, 255, 0.25);
+      padding: 4px;
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+      box-shadow: 0 6px 22px rgba(0,0,0,0.45);
+      transition: transform 0.15s ease;
+    }
+    .ar-shutter-btn::after {
+      content: '';
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: var(--gold-grad);
+      transition: transform 0.15s ease;
+    }
+    .ar-shutter-btn:active { transform: scale(0.92); }
+    .ar-shutter-btn:active::after { transform: scale(0.86); background: #fff; }
+    .ar-media-thumb {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: none;
+    }
+    .ar-flash {
+      position: fixed;
+      inset: 0;
+      background: #fff;
+      opacity: 0;
+      pointer-events: none;
+      z-index: 10001;
+      transition: opacity 0.25s ease;
+    }
+    .ar-flash.active { opacity: 0.85; }
+
+    /* Captured Snapshot Viewer Lightbox */
+    .capture-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 11000;
+      background: rgba(15, 2, 4, 0.88);
+      -webkit-backdrop-filter: blur(16px);
+      backdrop-filter: blur(16px);
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .capture-modal.open { display: flex; }
+    .capture-box {
+      background: #fff8ea;
+      border-radius: 26px;
+      padding: 16px;
+      max-width: 420px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.6);
+      border: 2px solid var(--gold);
+    }
+    .capture-box img {
+      width: 100%;
+      border-radius: 18px;
+      max-height: 62vh;
+      object-fit: contain;
+      background: #1d0507;
+    }
+    .capture-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin-top: 14px;
+    }
+
     /* FOOTER */
     .site-footer { position: relative; z-index: 1; text-align: center; margin-top: 2rem; color: #fff; padding: 2.8rem 1rem calc(2.4rem + env(safe-area-inset-bottom)); background: linear-gradient(180deg, rgba(154,11,18,0.82) 0%, rgba(74,5,8,0.94) 100%); -webkit-backdrop-filter: blur(18px) saturate(1.4); backdrop-filter: blur(18px) saturate(1.4); border-top: 1px solid rgba(255,255,255,0.4); box-shadow: inset 0 3px 0 var(--gold); }
     .site-footer .ld-logo { font-size: 34px; margin-top: 8px; }
@@ -340,7 +520,7 @@
       .step-t { font-size: 12px; }
       .hero-panel { padding: 2rem 1rem 1.6rem; border-radius: 32px; }
     }
-    /* MOBILE LAYOUT FIXES: prevent search/filter/card content from being clipped */
+    /* MOBILE LAYOUT FIXES */
     .search-row, .search-box, .controls, .controls-inner, .stage, .stage-card,
     .sc-swap, .sc-foot { min-width: 0; }
     .search-box { flex: 1 1 180px; }
@@ -503,6 +683,62 @@
   <div id="items-container" style="display:none"></div>
 </main>
 
+<!-- Dedicated Full-Screen AR Viewer with Custom Camera, 3D & Captured Item Controls -->
+<model-viewer
+  id="global-ar-viewer"
+  ar
+  ar-modes="scene-viewer webxr quick-look"
+  ar-placement="floor"
+  ar-scale="auto"
+  camera-controls
+  touch-action="pan-y"
+  shadow-intensity="1.2"
+  shadow-softness="0.85"
+  environment-image="neutral"
+  exposure="1.05"
+  interaction-prompt="auto"
+>
+  <div class="ar-hud">
+    <div class="ar-hud-top">
+      <span class="ar-dish-pill" id="ar-hud-title">Pinocchio AR</span>
+    </div>
+
+    <div class="ar-placement-hint" id="ar-placement-hint">
+      📱 Slowly move your phone over the table or floor to place the dish
+    </div>
+
+    <div class="ar-bottom-bar">
+      <!-- 1. Switch to 3D View Button -->
+      <button type="button" class="ar-ctl-btn" id="ar-to-3d-btn" aria-label="Switch to 3D view">
+        <svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+        <span>3D</span>
+      </button>
+
+      <!-- 2. Camera / Shutter Button -->
+      <button type="button" class="ar-shutter-btn" id="ar-shutter-btn" aria-label="Capture AR Photo"></button>
+
+      <!-- 3. View Captured / Recorded Item Button -->
+      <button type="button" class="ar-ctl-btn" id="ar-gallery-btn" aria-label="View captured item">
+        <img id="ar-media-thumb" class="ar-media-thumb" alt="Captured preview" />
+        <svg id="ar-gallery-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+      </button>
+    </div>
+  </div>
+</model-viewer>
+
+<div class="ar-flash" id="ar-flash"></div>
+
+<!-- Captured Item Preview Modal -->
+<div class="capture-modal" id="capture-modal" role="dialog" aria-modal="true" aria-label="Captured AR Preview">
+  <div class="capture-box">
+    <img id="capture-preview-img" src="" alt="Captured Dish" />
+    <div class="capture-actions">
+      <a id="capture-download-btn" class="ar-btn" download="Pinocchio-AR-Dish.png" style="text-decoration:none;">⬇ Save Photo</a>
+      <button type="button" class="ar-btn" id="capture-close-btn" style="background:#fff;">Close</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="modal-overlay" role="dialog" aria-modal="true" aria-label="Dish detail">
   <div class="modal-card">
     <span class="grab"></span>
@@ -622,12 +858,13 @@ const I18N = {
 const CAT_LABELS = {
   all:           { en: 'All', it: 'Tutti', kn: 'ಎಲ್ಲಾ', ta: 'அனைத்தும்', ml: 'എല്ലാം', te: 'అన్నీ' },
   starter:       { en: 'Starters', it: 'Antipasti', kn: 'ಸ್ಟಾರ್ಟರ್ಸ್', ta: 'ஸ்டார்ட்டர்ஸ்', ml: 'സ്റ്റാർട്ടേഴ്സ്', te: 'స్టార్టర్స్' },
-  'main-course': { en: 'Main Course', it: 'Portata Principale', kn: 'ಮುಖ್ಯ ಖಾದ್ಯ', ta: 'முக்கிய உணவு', ml: 'മെയിൻ കോഴ്സ്', te: 'మెయిన్ కోర్స్' },
+  'main-course': { en: 'Main Course', it: 'Portata Principale', kn: 'ಮುಖ್ಯ ಖಾದ್ಯ', ta: 'முக்கிய உணவு', ml: 'മെയിൻ കോഴ്സ്', te: 'మెయిൻ కోర్స్' },
   dessert:       { en: 'Desserts', it: 'Dolci', kn: 'ಡೆಸರ್ಟ್', ta: 'இனிப்பு', ml: 'ഡെസേർട്ട്', te: 'డెజర్ట్స్' }
 };
 
 let allDishes = [], rawRows = [], activeCategory = 'all', currentLang = 'en', query = '', vegOnly = false;
 const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const isAndroid = /Android/i.test(navigator.userAgent);
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const canHover = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
 
@@ -657,7 +894,7 @@ function normalizeKey(str) { return (str || '').toLowerCase().replace(/\s+/g, '-
 
 function getLocalAssets(dishName) {
   const entry = LOCAL_ASSETS[normalizeKey(dishName)];
-  if (!entry) return { posterPath: '', glbPath: '', usdzPath: '', scale: 0.05 };
+  if (!entry) return { posterPath: '', glbPath: '', usdzPath: '', scale: 0.25 };
   const base = `${ASSETS_BASE}/${entry.folder}/${entry.file}`;
   return { posterPath: `${base}.png`, glbPath: `${base}.glb`, usdzPath: `${base}.usdz`, scale: entry.scale };
 }
@@ -795,20 +1032,79 @@ function renderItems() {
   update();
 }
 
-/* ───────────── DIRECT AR LAUNCHER (BYPASSES MODAL) ───────────── */
-let directARMV = null;
+/* ───────────── UPGRADED DIRECT AR LAUNCHER + HUD CONTROLS ───────────── */
+const globalAR = $('global-ar-viewer');
+let currentARDish = null;
+let lastCapturedDataUrl = '';
+
+// 1. Switch from AR back to 3D Modal
+$('ar-to-3d-btn').addEventListener('click', () => {
+  if (currentARDish) {
+    openModal(currentARDish.id, true);
+  }
+});
+
+// 2. Camera Shutter Button (Captures AR / 3D Snapshot)
+$('ar-shutter-btn').addEventListener('click', async () => {
+  const flash = $('ar-flash');
+  flash.classList.add('active');
+  setTimeout(() => flash.classList.remove('active'), 220);
+
+  try {
+    const blob = await globalAR.toBlob({ idealAspect: true });
+    if (lastCapturedDataUrl) URL.revokeObjectURL(lastCapturedDataUrl);
+    lastCapturedDataUrl = URL.createObjectURL(blob);
+
+    const thumb = $('ar-media-thumb');
+    thumb.src = lastCapturedDataUrl;
+    thumb.style.display = 'block';
+    $('ar-gallery-icon').style.display = 'none';
+
+    $('capture-preview-img').src = lastCapturedDataUrl;
+    $('capture-download-btn').href = lastCapturedDataUrl;
+    $('capture-download-btn').download = `${(currentARDish?.name || 'Pinocchio-Dish').replace(/\s+/g, '-')}-AR.png`;
+  } catch (err) {
+    console.warn('Snapshot capture error:', err);
+  }
+});
+
+// 3. View Captured / Recorded Item Button
+$('ar-gallery-btn').addEventListener('click', () => {
+  if (!lastCapturedDataUrl) {
+    $('ar-shutter-btn').click();
+    setTimeout(() => {
+      if (lastCapturedDataUrl) $('capture-modal').classList.add('open');
+    }, 350);
+  } else {
+    $('capture-modal').classList.add('open');
+  }
+});
+
+$('capture-close-btn').addEventListener('click', () => $('capture-modal').classList.remove('open'));
+$('capture-modal').addEventListener('click', e => {
+  if (e.target === $('capture-modal')) $('capture-modal').classList.remove('open');
+});
+
+globalAR.addEventListener('ar-status', e => {
+  if (e.detail.status === 'session-started' || e.detail.status === 'object-placed') {
+    globalAR.classList.add('ar-active');
+  } else if (e.detail.status === 'not-presenting' || e.detail.status === 'failed') {
+    globalAR.classList.remove('ar-active');
+  }
+});
 
 function launchDirectAR(id, triggerBtn) {
   const d = allDishes.find(x => x.id === id);
   if (!d || !d.glbPath) return;
+  currentARDish = d;
   const t = T();
 
-  // 1. iOS Quick Look: launch directly in the same tap gesture so Safari never blocks it
+  // 1. iOS Quick Look: Native AR screen with Camera button, 3D toggle & ground placement
   if (isIOS && d.usdzPath) {
     const a = document.createElement('a');
     a.setAttribute('rel', 'ar');
-    const scalePct = Math.round((d.scale ?? 1) * 100);
-    a.setAttribute('href', `${d.usdzPath}#allowsContentScaling=0&canonicalWebPageURL=${encodeURIComponent(location.href)}`);
+    const absUsdz = new URL(d.usdzPath, location.href).href;
+    a.setAttribute('href', `${absUsdz}#allowsContentScaling=1&canonicalWebPageURL=${encodeURIComponent(location.href)}`);
     const img = document.createElement('img');
     a.appendChild(img);
     document.body.appendChild(a);
@@ -817,41 +1113,27 @@ function launchDirectAR(id, triggerBtn) {
     return;
   }
 
-  // 2. Check if this dish's model-viewer is already loaded in the Showcase stack
-  const showIdxMatch = showList.findIndex(x => x.id === d.id);
-  const existingMV = showIdxMatch >= 0 ? showMVs[showIdxMatch] : null;
-  if (existingMV && existingMV.loaded) {
-    try {
-      existingMV.activateAR();
-      return;
-    } catch (err) {
-      console.warn('Showcase AR launch fallback:', err);
-    }
+  // 2. Android Google Scene Viewer: Native AR screen with Camera/Video button, 3D switch button, and accurate floor placement
+  if (isAndroid) {
+    const absGlb = new URL(d.glbPath, location.href).href;
+    const title = encodeURIComponent(d.name);
+    const fallbackUrl = encodeURIComponent(location.href);
+    const intentUrl =
+      `intent://arvr.google.com/scene-viewer/1.2?file=${encodeURIComponent(absGlb)}&mode=ar_preferred&title=${title}&resizable=true&enable_vertical_placement=false#Intent;scheme=https;package=com.google.ar.core;action=android.intent.action.VIEW;S.browser_fallback_url=${fallbackUrl};end;`;
+    window.location.href = intentUrl;
+    return;
   }
 
-  // 3. Otherwise, load via hidden AR model-viewer and auto-activate AR as soon as ready
-  const origHTML = triggerBtn ? triggerBtn.innerHTML : '';
+  // 3. WebXR / Other devices: Use the full-screen Global AR Viewer with custom HUD controls
   if (triggerBtn) {
     triggerBtn.disabled = true;
     triggerBtn.innerHTML = `<span class="btn-spin"></span>${esc(t.launching)}`;
   }
 
-  if (directARMV) directARMV.remove();
-  const mv = document.createElement('model-viewer');
-  directARMV = mv;
-
-  mv.setAttribute('src', d.glbPath);
-  if (d.usdzPath) mv.setAttribute('ios-src', d.usdzPath);
-  const s = (d.scale ?? 1).toFixed(6);
-  mv.setAttribute('scale', `${s} ${s} ${s}`);
-  mv.setAttribute('ar', '');
-  mv.setAttribute('ar-modes', 'scene-viewer webxr quick-look');
-  mv.setAttribute('ar-placement', 'floor');
-  mv.setAttribute('ar-scale', 'fixed');
-  mv.setAttribute('loading', 'eager');
-  mv.setAttribute('reveal', 'auto');
-  mv.style.cssText = 'position:fixed;left:-9999px;top:-9999px;width:1px;height:1px;opacity:0;pointer-events:none;';
-  document.body.appendChild(mv);
+  $('ar-hud-title').textContent = d.name;
+  const s = (d.scale ?? 0.25).toFixed(4);
+  globalAR.setAttribute('scale', `${s} ${s} ${s}`);
+  if (d.usdzPath) globalAR.setAttribute('ios-src', d.usdzPath);
 
   const restoreBtn = () => {
     if (triggerBtn) {
@@ -860,20 +1142,26 @@ function launchDirectAR(id, triggerBtn) {
     }
   };
 
-  mv.addEventListener('load', () => {
+  const activateNow = () => {
     restoreBtn();
     try {
-      mv.activateAR();
+      globalAR.activateAR();
     } catch (err) {
       console.warn('Direct AR failed, opening 3D modal instead:', err);
       openModal(d.id, true);
     }
-  }, { once: true });
+  };
 
-  mv.addEventListener('error', () => {
-    restoreBtn();
-    openModal(d.id, true);
-  }, { once: true });
+  if (globalAR.getAttribute('src') === d.glbPath && globalAR.loaded) {
+    activateNow();
+  } else {
+    globalAR.setAttribute('src', d.glbPath);
+    globalAR.addEventListener('load', activateNow, { once: true });
+    globalAR.addEventListener('error', () => {
+      restoreBtn();
+      openModal(d.id, true);
+    }, { once: true });
+  }
 }
 
 /* ───────────── MODAL + AR + ZOOM ───────────── */
@@ -910,8 +1198,9 @@ function openModal(id, autoStart3D = false) {
     arBtnWrap.style.cssText = 'position:absolute;bottom:18px;left:50%;transform:translateX(-50%);z-index:6;display:flex;gap:10px;align-items:center;';
     arBtnWrap.innerHTML = `<button class="modal-ar-launch-btn" type="button">${SVG_CUBE}${esc(t.viewTable)}</button>`;
     vw.insertBefore(arBtnWrap, arBadge);
-    arBtnWrap.querySelector('.modal-ar-launch-btn').addEventListener('click', () => loadModelAndAR(d, vw, arBadge, arBtnWrap, photoWrap));
-    if (autoStart3D) loadModelAndAR(d, vw, arBadge, arBtnWrap, photoWrap);
+    const modalBtn = arBtnWrap.querySelector('.modal-ar-launch-btn');
+    modalBtn.addEventListener('click', () => launchDirectAR(d.id, modalBtn));
+    if (autoStart3D) loadModelInModal(d, vw, arBadge, arBtnWrap, photoWrap);
   }
 
   $('modal-overlay').classList.add('open');
@@ -932,22 +1221,20 @@ function addModalZoom(mv, vw, arBadge) {
   col.querySelector('[data-z="out"]').addEventListener('click', () => zoomBy(1.33));
 }
 
-function loadModelAndAR(d, vw, arBadge, arBtnWrap, photoWrap) {
+function loadModelInModal(d, vw, arBadge, arBtnWrap, photoWrap) {
   const t = T();
   const btn = arBtnWrap.querySelector('.modal-ar-launch-btn');
-  btn.disabled = true;
-  btn.innerHTML = `<span class="btn-spin"></span>${esc(t.launching)}`;
 
   const mv = document.createElement('model-viewer');
   mv.setAttribute('src', d.glbPath);
   if (isIOS && d.usdzPath) mv.setAttribute('ios-src', d.usdzPath);
 
-  const s = (d.scale ?? 1).toFixed(6);
+  const s = (d.scale ?? 0.25).toFixed(4);
   mv.setAttribute('scale', `${s} ${s} ${s}`);
   mv.setAttribute('ar', '');
-  mv.setAttribute('ar-modes', 'webxr scene-viewer quick-look');
+  mv.setAttribute('ar-modes', 'scene-viewer webxr quick-look');
   mv.setAttribute('ar-placement', 'floor');
-  mv.setAttribute('ar-scale', 'fixed');
+  mv.setAttribute('ar-scale', 'auto');
   mv.setAttribute('camera-controls', '');
   mv.setAttribute('touch-action', 'pan-y');
   mv.setAttribute('shadow-intensity', '1');
@@ -970,23 +1257,7 @@ function loadModelAndAR(d, vw, arBadge, arBtnWrap, photoWrap) {
     arBtnWrap.style.display = 'flex';
     btn.disabled = false;
     btn.innerHTML = `${SVG_CUBE}${esc(t.viewTable)}`;
-    btn.onclick = () => { try { mv.activateAR(); } catch (e) { console.warn(e); } };
     addModalZoom(mv, vw, arBadge);
-
-    // Auto-launch AR immediately
-    mv.activateAR();
-    mv.addEventListener('ar-status', e => {
-      if (e.detail.status === 'failed' || e.detail.status === 'not-presenting') {
-        btn.disabled = false; btn.innerHTML = `${SVG_CUBE}${esc(t.viewTable)}`;
-      }
-    }, { once: true });
-  });
-
-  mv.addEventListener('error', () => {
-    btn.disabled = false;
-    btn.innerHTML = `⚠ ${esc(t.retry)}`;
-    btn.onclick = () => { mv.remove(); loadModelAndAR(d, vw, arBadge, arBtnWrap, photoWrap); };
-    mv.remove();
   });
 }
 
@@ -1043,11 +1314,11 @@ function renderShowcase() {
   stack.innerHTML = '';
   showMVs = showList.map(d => {
     const mv = document.createElement('model-viewer');
-    const s = (d.scale ?? 1).toFixed(6);
+    const s = (d.scale ?? 0.25).toFixed(4);
     Object.entries({
       src: d.glbPath, poster: d.posterPath || '', alt: d.name,
       scale: `${s} ${s} ${s}`,
-      ar: '', 'ar-modes': 'webxr scene-viewer quick-look', 'ar-placement': 'floor', 'ar-scale': 'fixed',
+      ar: '', 'ar-modes': 'scene-viewer webxr quick-look', 'ar-placement': 'floor', 'ar-scale': 'auto',
       'camera-orbit': '-40deg 72deg 130%', 'field-of-view': '30deg',
       'min-camera-orbit': 'auto auto 25%', 'max-camera-orbit': 'auto auto 320%', 'shadow-intensity': '1', 'shadow-softness': '0.9',
       exposure: '1.1', 'environment-image': 'neutral', 'interaction-prompt': 'none', 'disable-zoom': '', 'disable-pan': '',
