@@ -1170,7 +1170,7 @@ const I18N = {
 
 const CAT_LABELS = {
   all:           { en: 'All', it: 'Tutti', kn: 'ಎಲ್ಲಾ', ta: 'அனைத்தும்', ml: 'എല്ലാം', te: 'అన్నీ' },
-  starter:       { en: 'Starters', it: 'Antipasti', kn: 'ಸ್ಟಾರ್ಟರ್ಸ್', ta: 'ஸ்டார்ட்டர்ஸ்', ml: 'സ്റ്റാർട്ടേഴ്സ്', te: 'స్టార్టర్ಸ್' },
+  starter:       { en: 'Starters', it: 'Antipasti', kn: 'ಸ್ಟಾರ್ಟರ್ಸ್', ta: 'ஸ்டார்ட்டர்ஸ்', ml: 'സ്റ്റാർട്ടേഴ്സ്', te: 'స్టార్టర్స్' },
   'main-course': { en: 'Main Course', it: 'Portata Principale', kn: 'ಮುಖ್ಯ ಖಾದ್ಯ', ta: 'முக்கிய உணவு', ml: 'മെയിൻ കോഴ്സ്', te: 'మెయిన్ కోర్స్' },
   dessert:       { en: 'Desserts', it: 'Dolci', kn: 'ಡೆಸರ್ಟ್', ta: 'இனிப்பு', ml: 'ഡെസേർട്ട്', te: 'డెజర్ట్స్' }
 };
@@ -1428,8 +1428,10 @@ function updateTraySummary(subtotal) {
   const grandTotal = subtotal + tax;
   const perPerson = Math.round(grandTotal / splitGuests);
 
-  $('tray-subtotal').textContent = subtotal.toLocaleString('en-IN');$('tray-tax').textContent = tax.toLocaleString('en-IN');
-  $('tray-grandtotal').textContent = grandTotal.toLocaleString('en-IN');$('tray-split-count').textContent = splitGuests;
+  $('tray-subtotal').textContent = subtotal.toLocaleString('en-IN');
+  $('tray-tax').textContent = tax.toLocaleString('en-IN');
+  $('tray-grandtotal').textContent = grandTotal.toLocaleString('en-IN');
+  $('tray-split-count').textContent = splitGuests;
   $('tray-per-person').textContent = perPerson.toLocaleString('en-IN');
 }
 
@@ -1437,7 +1439,8 @@ $('tray-open-btn').addEventListener('click', () => {
   renderTrayModalList();
   $('tray-modal').classList.add('open');
 });
-$('tray-close-btn').addEventListener('click', () => $('tray-modal').classList.remove('open'));$('tray-modal').addEventListener('click', e => { if (e.target === $('tray-modal'))$('tray-modal').classList.remove('open'); });
+$('tray-close-btn').addEventListener('click', () => $('tray-modal').classList.remove('open'));
+$('tray-modal').addEventListener('click', e => { if (e.target === $('tray-modal')) $('tray-modal').classList.remove('open'); });
 
 $('tray-clear-btn').addEventListener('click', () => {
   tableTray = {};
@@ -1549,7 +1552,8 @@ function stepARDish(dir) {
   switchARDish(list[nextIdx].id);
 }
 
-$('ar-prev-btn').addEventListener('click', e => { e.stopPropagation(); stepARDish(-1); });$('ar-next-btn').addEventListener('click', e => { e.stopPropagation(); stepARDish(1); });
+$('ar-prev-btn').addEventListener('click', e => { e.stopPropagation(); stepARDish(-1); });
+$('ar-next-btn').addEventListener('click', e => { e.stopPropagation(); stepARDish(1); });
 
 async function exitARSession() {
   try {
@@ -1594,12 +1598,16 @@ $('ar-gallery-btn').addEventListener('click', () => {
   if (!lastCapturedDataUrl) {
     $('ar-shutter-btn').click();
     setTimeout(() => {
-      if (lastCapturedDataUrl) $('capture-modal').classList.add('open'); }, 350); } else {$('capture-modal').classList.add('open');
+      if (lastCapturedDataUrl) $('capture-modal').classList.add('open');
+    }, 350);
+  } else {
+    $('capture-modal').classList.add('open');
   }
 });
 
-$('capture-close-btn').addEventListener('click', () => $('capture-modal').classList.remove('open'));$('capture-modal').addEventListener('click', e => {
-  if (e.target === $('capture-modal'))$('capture-modal').classList.remove('open');
+$('capture-close-btn').addEventListener('click', () => $('capture-modal').classList.remove('open'));
+$('capture-modal').addEventListener('click', e => {
+  if (e.target === $('capture-modal')) $('capture-modal').classList.remove('open');
 });
 
 globalAR.addEventListener('ar-status', e => {
@@ -1871,3 +1879,157 @@ function setShowDish(idx) {
   $('sc-desc').textContent = d.desc;
   $('sc-desc').style.display = d.desc ? '' : 'none';
   $('sc-price').innerHTML = `<span class="price-sym">₹</span>${d.price.toLocaleString('en-IN')}`;
+  $('sc-ar-t').textContent = t.arNote;
+  $('sc-ai-t').textContent = aiLong(d);$('sc-tray-add').dataset.id = d.id;
+  const qty = tableTray[d.id] || 0;
+  $('sc-tray-add').textContent = qty > 0 ? `✓ ${qty}` : t.addTray;
+
+  $('sc-dots').querySelectorAll('.dot').forEach((b, i) => b.classList.toggle('active', i === idx));
+  const sw = $('sc-swap'); sw.classList.remove('pop'); void sw.offsetWidth; sw.classList.add('pop');
+}
+
+$('sc-tray-add').addEventListener('click', () => {
+  const d = showList[showIdx];
+  if (d) addToTray(d.id);
+});
+
+function updateShowcase() {
+  if (!showList.length || showMVs.length !== showList.length) return;
+  const sec = $('showcase');
+  const r = sec.getBoundingClientRect(), vh = window.innerHeight;
+  if (r.top > vh * 1.5 || r.bottom < -vh * 0.5) return;
+  const n = showList.length;
+  const span = Math.max(1, r.height - vh);
+  const p = clamp(-r.top / span, 0, 1);
+  sec.style.setProperty('--rot', (p * 540).toFixed(1) + 'deg');
+  const f = p * (n - 0.4);
+  const idx = clamp(Math.floor(f + 0.2), 0, n - 1);
+  if (idx !== showIdx) setShowDish(idx);
+
+  showMVs.forEach((mv, i) => {
+    let u = f - i;
+    if (i === 0 && u < 0) u = 0;
+    if (i === n - 1 && u > 0.6) u = 0.6;
+    let rad = 130, op = 0;
+    if (u >= -0.4 && u < 1) {
+      if (u < 0)        { const t = (u + 0.4) / 0.4; rad = lerp(320, 130, 1 - Math.pow(1 - t, 3)); op = t; }
+      else if (u < 0.6) { rad = lerp(130, 75, u / 0.6); op = 1; }
+      else              { const t = (u - 0.6) / 0.4; rad = lerp(75, 26, t * t); op = 1 - ease(t); }
+    }
+    mv.style.opacity = op.toFixed(3);
+    mv.style.visibility = op > 0.01 ? 'visible' : 'hidden';
+    mv.style.zIndex = u >= 0 ? 2 : 1;
+    if (op > 0.01) mv.cameraOrbit = `${(-40 + clamp(u, -0.4, 1) * 200).toFixed(1)}deg 72deg ${rad.toFixed(1)}%`;
+  });
+}
+
+$('sc-ar').addEventListener('click', e => {
+  const d = showList[showIdx];
+  if (d) launchDirectAR(d.id, e.currentTarget);
+});
+
+/* ───────────── SCROLL ENGINE ───────────── */
+const heroEl = $('hero'), progressEl =$('progress');
+let ticking = false, heroH = 600, scrollFrac = 0, mouseX = 0, mouseY = 0;
+
+function updateCards(vh) {
+  document.querySelectorAll('.menu-card').forEach(c => {
+    const cell = c.parentElement;
+    const r = cell.getBoundingClientRect();
+    if (r.bottom < -vh * 0.3 || r.top > vh * 1.3) { c.style.setProperty('--so', '0'); return; }
+    const d = clamp(((r.top + r.height / 2) - vh * 0.52) / (vh * 0.5), -1.4, 1.4);
+    const ad = Math.abs(d);
+    c.style.setProperty('--srx', (d > 0 ? d * 16 : d * 8).toFixed(2) + 'deg');
+    c.style.setProperty('--sty', (d > 0 ? d * 48 : 0).toFixed(1) + 'px');
+    c.style.setProperty('--sc',  (1 - ad * 0.07).toFixed(3));
+    c.style.setProperty('--so',  clamp(1 - Math.max(0, ad - 0.7) * 2.2, 0, 1).toFixed(3));
+  });
+}
+
+function update() {
+  ticking = false;
+  const y = window.scrollY, vh = window.innerHeight;
+  const max = Math.max(1, document.documentElement.scrollHeight - vh);
+  scrollFrac = clamp(y / max, 0, 1);
+  progressEl.style.transform = `scaleX(${scrollFrac.toFixed(4)})`;
+  if (!reduceMotion) {
+    heroEl.style.setProperty('--hp', clamp(y / (heroH * 0.85), 0, 1).toFixed(4));
+    updateCards(vh);
+  }
+  updateShowcase();
+}
+function requestUpdate() { if (!ticking) { ticking = true; requestAnimationFrame(update); } }
+function measure() { heroH = heroEl.offsetHeight || 600; requestUpdate(); }
+
+window.addEventListener('scroll', requestUpdate, { passive: true });
+window.addEventListener('resize', measure);
+window.addEventListener('load', measure);
+window.addEventListener('pointermove', e => {
+  mouseX = (e.clientX / window.innerWidth - 0.5) * 2;
+  mouseY = (e.clientY / window.innerHeight - 0.5) * 2;
+  if (!reduceMotion) { heroEl.style.setProperty('--mx', mouseX.toFixed(3)); heroEl.style.setProperty('--my', mouseY.toFixed(3)); }
+}, { passive: true });
+
+/* ───────────── UI TEXT / LANGUAGE / INIT ───────────── */
+$('search').addEventListener('input', e => { query = e.target.value; renderItems(); });$('veg-toggle').addEventListener('click', e => {
+  vegOnly = !vegOnly;
+  e.currentTarget.setAttribute('aria-pressed', String(vegOnly));
+  renderItems();
+});
+
+function applyUIText() {
+  const t = T();
+  $('ui-sub-tag').textContent  = t.sub;
+  $('ui-ar-badge').textContent = t.badge;
+  $('ui-loading').textContent  = t.loading;
+  $('ui-veg-only').textContent = t.vegOnly;
+  $('ui-footer').textContent   = t.footer;
+  $('ui-footer-2').textContent = t.footer2;
+  $('ui-footer-3').textContent = t.footer3;
+  $('ui-step-1').textContent   = t.s1;
+  $('ui-step-2').textContent   = t.s2;
+  $('ui-step-3').textContent   = t.s3;
+  $('ui-hp1').textContent      = t.hp1;
+  $('ui-hp2').textContent      = t.hp2;
+  $('ui-hp3').textContent      = t.hp3;
+  $('ui-scroll').textContent   = t.scroll;
+  $('ar-carousel-label').textContent = t.arSwipe;
+  $('sc-ar').innerHTML         = SVG_CUBE + esc(t.viewTable);$('search').placeholder      = t.search;
+  document.documentElement.lang = currentLang;
+}
+
+$('lang-select').addEventListener('change', e => {
+  currentLang = e.target.value;
+  applyUIText();
+  allDishes = rawRows.map(rowToDish).filter(d => d.name);
+  renderTabs(); renderItems(); renderShowcase(); renderARCarousel();
+});
+
+async function init() {
+  const loadingEl = $('loading-state');
+  const container = $('items-container');
+  applyUIText();
+  try {
+    const res = await fetch(CSV_URL);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    rawRows   = parseCSV(await res.text());
+    allDishes = rawRows.map(rowToDish).filter(d => d.name);
+    if (!allDishes.length) throw new Error('No dishes found.');
+    loadingEl.style.display = 'none';
+    container.style.display = 'block';
+    renderTabs(); renderItems(); renderShowcase(); renderARCarousel();
+  } catch (err) {
+    console.error('Menu load error:', err);
+    placeControls(false);
+    loadingEl.innerHTML = `
+      <p class="error-title">Could not load menu</p>
+      <p class="error-body">Make sure your sheet is published:<br><strong>File → Share → Publish to web → CSV</strong></p>`;
+  }
+}
+
+renderTabs();
+measure();
+init();
+</script>
+</body>
+</html>
