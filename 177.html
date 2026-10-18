@@ -1351,4 +1351,523 @@ function renderItems() {
   }));
   container.querySelectorAll('.tray-add-btn').forEach(btn => btn.addEventListener('click', e => {
     e.stopPropagation();
-    addTo
+    addToTray(btn.dataset.id);
+  }));
+  update();
+}
+
+/* ───────────── TABLE TRAY LOGIC (SHOW TO WAITER) ───────────── */
+function addToTray(id) {
+  tableTray[id] = (tableTray[id] || 0) + 1;
+  updateTrayUI();
+  renderItems();
+  if (currentModalDishId === id) updateModalTrayButton(id);
+}
+
+window.updateTrayQty = function(id, delta) {
+  tableTray[id] = (tableTray[id] || 0) + delta;
+  if (tableTray[id] <= 0) delete tableTray[id];
+  updateTrayUI();
+  renderItems();
+  renderTrayModalList();
+  if (currentModalDishId === id) updateModalTrayButton(id);
+};
+
+function updateTrayUI() {
+  const ids = Object.keys(tableTray);
+  const totalCount = Object.values(tableTray).reduce((a, b) => a + b, 0);
+  const subtotal = ids.reduce((sum, id) => {
+    const d = allDishes.find(x => x.id === id);
+    return sum + (d ? d.price * tableTray[id] : 0);
+  }, 0);
+
+  const bar = $('tray-pill-bar');
+  if (totalCount > 0) {
+    bar.classList.add('visible');
+    $('tray-count-txt').textContent = `${totalCount} Item${totalCount > 1 ? 's' : ''} Selected`;
+    $('tray-total-txt').textContent = subtotal.toLocaleString('en-IN');
+  } else {
+    bar.classList.remove('visible');
+  }
+}
+
+function renderTrayModalList() {
+  const listEl = $('tray-items-list');
+  const ids = Object.keys(tableTray);
+  if (!ids.length) {
+    listEl.innerHTML = `<div style="text-align:center; padding:2rem 0; color:var(--ink-soft); font-style:italic;">Your table tray is empty. Tap "+ Add" on any dish!</div>`;
+    updateTraySummary(0);
+    return;
+  }
+
+  let subtotal = 0;
+  listEl.innerHTML = ids.map(id => {
+    const d = allDishes.find(x => x.id === id);
+    if (!d) return '';
+    const qty = tableTray[id];
+    subtotal += d.price * qty;
+    return `
+      <div class="tray-item-row">
+        <div class="tray-item-info">
+          <span class="tray-item-name">${d.emoji} ${esc(d.name)}</span>
+          <span class="tray-item-price">₹${d.price.toLocaleString('en-IN')} each</span>
+        </div>
+        <div class="tray-qty-controls">
+          <button type="button" class="tray-qty-btn" onclick="updateTrayQty('${d.id}', -1)">−</button>
+          <span class="tray-qty-num">${qty}</span>
+          <button type="button" class="tray-qty-btn" onclick="updateTrayQty('${d.id}', 1)">+</button>
+        </div>
+      </div>`;
+  }).join('');
+
+  updateTraySummary(subtotal);
+}
+
+function updateTraySummary(subtotal) {
+  const tax = Math.round(subtotal * 0.05);
+  const grandTotal = subtotal + tax;
+  const perPerson = Math.round(grandTotal / splitGuests);
+
+  $('tray-subtotal').textContent = subtotal.toLocaleString('en-IN');$('tray-tax').textContent = tax.toLocaleString('en-IN');
+  $('tray-grandtotal').textContent = grandTotal.toLocaleString('en-IN');$('tray-split-count').textContent = splitGuests;
+  $('tray-per-person').textContent = perPerson.toLocaleString('en-IN');
+}
+
+$('tray-open-btn').addEventListener('click', () => {
+  renderTrayModalList();
+  $('tray-modal').classList.add('open');
+});
+$('tray-close-btn').addEventListener('click', () => $('tray-modal').classList.remove('open'));$('tray-modal').addEventListener('click', e => { if (e.target === $('tray-modal'))$('tray-modal').classList.remove('open'); });
+
+$('tray-clear-btn').addEventListener('click', () => {
+  tableTray = {};
+  updateTrayUI();
+  renderItems();
+  renderTrayModalList();
+});
+
+$('tray-waiter-action-btn').addEventListener('click', () => {
+  alert('🔔 Waiter alerted! Your table order summary has been prepared for the server.');
+  $('tray-modal').classList.remove('open');
+});
+
+document.querySelectorAll('.split-pill').forEach(pill => {
+  pill.addEventListener('click', () => {
+    document.querySelectorAll('.split-pill').forEach(p => p.classList.remove('active'));
+    pill.classList.add('active');
+    splitGuests = parseInt(pill.dataset.guests, 10);
+    const sub = Object.keys(tableTray).reduce((sum, id) => {
+      const d = allDishes.find(x => x.id === id);
+      return sum + (d ? d.price * tableTray[id] : 0);
+    }, 0);
+    updateTraySummary(sub);
+  });
+});
+
+/* ───────────── UPGRADED DIRECT AR LAUNCHER + DISH CAROUSEL HUD ───────────── */
+const globalAR = $('global-ar-viewer');
+let currentARDish = null;
+let lastCapturedDataUrl = '';
+
+function getARDishes() {
+  return allDishes.filter(d => d.glbPath && d.available);
+}
+
+function renderARCarousel() {
+  const wrap = $('ar-carousel');
+  if (!wrap) return;
+  const arDishes = getARDishes();
+  wrap.innerHTML = arDishes.map(d => {
+    const isActive = currentARDish && currentARDish.id === d.id;
+    const thumb = d.posterPath
+      ? `<img src="${esc(d.posterPath)}" alt="${esc(d.name)}" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><span style="display:none">${d.emoji}</span>`
+      : `<span>${d.emoji}</span>`;
+    return `
+      <button type="button" class="ar-carousel-item${isActive ? ' active' : ''}" data-ar-id="${esc(d.id)}" role="option" aria-selected="${isActive}">
+        <span class="ar-c-thumb">${thumb}</span>
+        <span class="ar-c-meta">
+          <span class="ar-c-name">${esc(d.name)}</span>
+          <span class="ar-c-price">₹${d.price.toLocaleString('en-IN')}</span>
+        </span>
+      </button>`;
+  }).join('');
+
+  wrap.querySelectorAll('.ar-carousel-item').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      switchARDish(btn.dataset.arId);
+    });
+  });
+
+  scrollActiveCarouselItemIntoView();
+}
+
+function scrollActiveCarouselItemIntoView() {
+  const wrap = $('ar-carousel');
+  if (!wrap) return;
+  const activeEl = wrap.querySelector('.ar-carousel-item.active');
+  if (activeEl) {
+    activeEl.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+  }
+}
+
+function updateARHudHeader(d) {
+  if (!d) return;
+  $('ar-hud-title').textContent = d.name;
+  $('ar-hud-price').textContent = `₹${d.price.toLocaleString('en-IN')}`;
+}
+
+function switchARDish(id) {
+  const d = allDishes.find(x => x.id === id);
+  if (!d || !d.glbPath) return;
+  currentARDish = d;
+  updateARHudHeader(d);
+
+  const s = (d.scale ?? 0.25).toFixed(4);
+  globalAR.setAttribute('scale', `${s} ${s} ${s}`);
+  if (d.usdzPath) globalAR.setAttribute('ios-src', d.usdzPath);
+  if (globalAR.getAttribute('src') !== d.glbPath) {
+    globalAR.setAttribute('src', d.glbPath);
+  }
+
+  const wrap = $('ar-carousel');
+  if (wrap) {
+    wrap.querySelectorAll('.ar-carousel-item').forEach(btn => {
+      const active = btn.dataset.arId === d.id;
+      btn.classList.toggle('active', active);
+      btn.setAttribute('aria-selected', String(active));
+    });
+    scrollActiveCarouselItemIntoView();
+  }
+}
+
+function stepARDish(dir) {
+  const list = getARDishes();
+  if (!list.length) return;
+  const idx = list.findIndex(x => currentARDish && x.id === currentARDish.id);
+  const nextIdx = (idx + dir + list.length) % list.length;
+  switchARDish(list[nextIdx].id);
+}
+
+$('ar-prev-btn').addEventListener('click', e => { e.stopPropagation(); stepARDish(-1); });$('ar-next-btn').addEventListener('click', e => { e.stopPropagation(); stepARDish(1); });
+
+async function exitARSession() {
+  try {
+    if (document.fullscreenElement) await document.exitFullscreen();
+  } catch (e) {}
+  globalAR.classList.remove('ar-active');
+}
+
+$('ar-close-btn').addEventListener('click', exitARSession);
+
+$('ar-to-3d-btn').addEventListener('click', async () => {
+  await exitARSession();
+  if (currentARDish) {
+    openModal(currentARDish.id, true);
+  }
+});
+
+$('ar-shutter-btn').addEventListener('click', async () => {
+  const flash = $('ar-flash');
+  flash.classList.add('active');
+  setTimeout(() => flash.classList.remove('active'), 220);
+
+  try {
+    const blob = await globalAR.toBlob({ idealAspect: true });
+    if (lastCapturedDataUrl) URL.revokeObjectURL(lastCapturedDataUrl);
+    lastCapturedDataUrl = URL.createObjectURL(blob);
+
+    const thumb = $('ar-media-thumb');
+    thumb.src = lastCapturedDataUrl;
+    thumb.style.display = 'block';
+    $('ar-gallery-icon').style.display = 'none';
+
+    $('capture-preview-img').src = lastCapturedDataUrl;
+    $('capture-download-btn').href = lastCapturedDataUrl;
+    $('capture-download-btn').download = `${(currentARDish?.name || 'Pinocchio-Dish').replace(/\s+/g, '-')}-AR.png`;
+  } catch (err) {
+    console.warn('Snapshot capture error:', err);
+  }
+});
+
+$('ar-gallery-btn').addEventListener('click', () => {
+  if (!lastCapturedDataUrl) {
+    $('ar-shutter-btn').click();
+    setTimeout(() => {
+      if (lastCapturedDataUrl) $('capture-modal').classList.add('open'); }, 350); } else {$('capture-modal').classList.add('open');
+  }
+});
+
+$('capture-close-btn').addEventListener('click', () => $('capture-modal').classList.remove('open'));$('capture-modal').addEventListener('click', e => {
+  if (e.target === $('capture-modal'))$('capture-modal').classList.remove('open');
+});
+
+globalAR.addEventListener('ar-status', e => {
+  if (e.detail.status === 'session-started' || e.detail.status === 'object-placed') {
+    globalAR.classList.add('ar-active');
+    renderARCarousel();
+  } else if (e.detail.status === 'not-presenting' || e.detail.status === 'failed') {
+    globalAR.classList.remove('ar-active');
+  }
+});
+
+function launchDirectAR(id, triggerBtn) {
+  const d = allDishes.find(x => x.id === id);
+  if (!d || !d.glbPath) return;
+  currentARDish = d;
+  const t = T();
+
+  if (isIOS && d.usdzPath) {
+    const a = document.createElement('a');
+    a.setAttribute('rel', 'ar');
+    const absUsdz = new URL(d.usdzPath, location.href).href;
+    a.setAttribute('href', `${absUsdz}#allowsContentScaling=1&canonicalWebPageURL=${encodeURIComponent(location.href)}`);
+    const img = document.createElement('img');
+    a.appendChild(img);
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    return;
+  }
+
+  if (triggerBtn) {
+    triggerBtn.disabled = true;
+    triggerBtn.innerHTML = `<span class="btn-spin"></span>${esc(t.launching)}`;
+  }
+
+  updateARHudHeader(d);
+  renderARCarousel();
+
+  const s = (d.scale ?? 0.25).toFixed(4);
+  globalAR.setAttribute('scale', `${s} ${s} ${s}`);
+  if (d.usdzPath) globalAR.setAttribute('ios-src', d.usdzPath);
+
+  const restoreBtn = () => {
+    if (triggerBtn) {
+      triggerBtn.disabled = false;
+      triggerBtn.innerHTML = `${SVG_CUBE}${esc(T().viewTable)}`;
+    }
+  };
+
+  const activateNow = () => {
+    restoreBtn();
+    try {
+      globalAR.activateAR();
+    } catch (err) {
+      console.warn('Direct AR failed, opening 3D modal instead:', err);
+      openModal(d.id, true);
+    }
+  };
+
+  if (globalAR.getAttribute('src') === d.glbPath && globalAR.loaded) {
+    activateNow();
+  } else {
+    globalAR.setAttribute('src', d.glbPath);
+    globalAR.addEventListener('load', activateNow, { once: true });
+    globalAR.addEventListener('error', () => {
+      restoreBtn();
+      openModal(d.id, true);
+    }, { once: true });
+  }
+}
+
+/* ───────────── MODAL + AR + ZOOM ───────────── */
+function updateModalTrayButton(id) {
+  const btn = $('modal-tray-add');
+  if (!btn) return;
+  const qty = tableTray[id] || 0;
+  btn.textContent = qty > 0 ? `✓ Added (${qty})` : '+ Add to Table';
+}
+
+function openModal(id, autoStart3D = false) {
+  const d = allDishes.find(x => x.id === id);
+  if (!d) return;
+  currentModalDishId = d.id;
+  const t = T();
+  $('modal-name').textContent = d.name;
+  $('modal-desc').textContent = d.desc;
+  $('modal-desc').style.display = d.desc ? '' : 'none';
+  $('modal-price').innerHTML = `<span class="price-sym">₹</span>${d.price.toLocaleString('en-IN')}`;
+  $('modal-tags').innerHTML = tagHTML(d);$('modal-ar-t').textContent = d.glbPath ? t.arNote : t.ftAR;
+  $('modal-ai-t').textContent = aiLong(d);
+  updateModalTrayButton(d.id);
+
+  const arBadge = $('mv-ar-badge');
+  arBadge.classList.remove('visible');
+  arBadge.textContent = t.arReady;
+
+  const vw = $('modal-viewer-wrap');
+  vw.querySelectorAll('.modal-photo, model-viewer, .mv-ar-btn-wrap, .mv-zoom-col').forEach(el => el.remove());
+
+  const photoWrap = document.createElement('div');
+  photoWrap.className = 'modal-photo';
+  photoWrap.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;overflow:hidden;';
+  photoWrap.innerHTML = d.posterPath
+    ? `<img src="${esc(d.posterPath)}" alt="${esc(d.name)}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><span style="display:none;font-size:90px;">${d.emoji}</span>`
+    : `<span style="font-size:90px;">${d.emoji}</span>`;
+  vw.insertBefore(photoWrap, arBadge);
+
+  if (d.glbPath) {
+    const arBtnWrap = document.createElement('div');
+    arBtnWrap.className = 'mv-ar-btn-wrap';
+    arBtnWrap.style.cssText = 'position:absolute;bottom:18px;left:50%;transform:translateX(-50%);z-index:6;display:flex;gap:10px;align-items:center;';
+    arBtnWrap.innerHTML = `<button class="modal-ar-launch-btn" type="button">${SVG_CUBE}${esc(t.viewTable)}</button>`;
+    vw.insertBefore(arBtnWrap, arBadge);
+    const modalBtn = arBtnWrap.querySelector('.modal-ar-launch-btn');
+    modalBtn.addEventListener('click', () => launchDirectAR(d.id, modalBtn));
+    if (autoStart3D) loadModelInModal(d, vw, arBadge, arBtnWrap, photoWrap);
+  }
+
+  $('modal-overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+$('modal-tray-add').addEventListener('click', () => {
+  if (currentModalDishId) addToTray(currentModalDishId);
+});
+
+function addModalZoom(mv, vw, arBadge) {
+  const t = T();
+  const col = document.createElement('div');
+  col.className = 'mv-zoom-col';
+  col.innerHTML = `<button class="zbtn" type="button" data-z="in" aria-label="${esc(t.zoomIn)}">+</button><button class="zbtn" type="button" data-z="out" aria-label="${esc(t.zoomOut)}">−</button>`;
+  vw.insertBefore(col, arBadge);
+  const zoomBy = f => {
+    const o = mv.getCameraOrbit();
+    mv.cameraOrbit = `${o.theta}rad ${o.phi}rad ${o.radius * f}m`;
+  };
+  col.querySelector('[data-z="in"]').addEventListener('click', () => zoomBy(0.75));
+  col.querySelector('[data-z="out"]').addEventListener('click', () => zoomBy(1.33));
+}
+
+function loadModelInModal(d, vw, arBadge, arBtnWrap, photoWrap) {
+  const t = T();
+  const btn = arBtnWrap.querySelector('.modal-ar-launch-btn');
+
+  const mv = document.createElement('model-viewer');
+  mv.setAttribute('src', d.glbPath);
+  if (isIOS && d.usdzPath) mv.setAttribute('ios-src', d.usdzPath);
+
+  const s = (d.scale ?? 0.25).toFixed(4);
+  mv.setAttribute('scale', `${s} ${s} ${s}`);
+  mv.setAttribute('ar', '');
+  mv.setAttribute('ar-modes', 'webxr quick-look');
+  mv.setAttribute('ar-placement', 'floor');
+  mv.setAttribute('ar-scale', 'auto');
+  mv.setAttribute('camera-controls', '');
+  mv.setAttribute('touch-action', 'pan-y');
+  mv.setAttribute('shadow-intensity', '1');
+  mv.setAttribute('shadow-softness', '0.8');
+  mv.setAttribute('environment-image', 'neutral');
+  mv.setAttribute('exposure', '1');
+  mv.setAttribute('camera-orbit', '0deg 75deg 105%');
+  mv.setAttribute('min-camera-orbit', 'auto auto 30%');
+  mv.setAttribute('max-camera-orbit', 'auto auto 200%');
+  mv.setAttribute('interaction-prompt', 'none');
+  mv.setAttribute('loading', 'eager');
+  mv.setAttribute('reveal', 'auto');
+  mv.innerHTML = `<button slot="ar-button" style="display:none;"></button><button slot="exit-webxr-ar-button" style="display:none;"></button>`;
+  mv.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;background:transparent;touch-action:pan-y pinch-zoom;z-index:-1;opacity:0;pointer-events:none;';
+  vw.insertBefore(mv, arBadge);
+
+  mv.addEventListener('load', () => {
+    photoWrap.style.display = 'none';
+    mv.style.zIndex = '2'; mv.style.opacity = '1'; mv.style.pointerEvents = 'auto';
+    arBadge.classList.add('visible');
+    arBtnWrap.style.display = 'flex';
+    btn.disabled = false;
+    btn.innerHTML = `${SVG_CUBE}${esc(t.viewTable)}`;
+    addModalZoom(mv, vw, arBadge);
+  });
+}
+
+function closeModal() {
+  const mvEl = document.querySelector('#modal-viewer-wrap model-viewer');
+  if (mvEl && typeof mvEl.pause === 'function') mvEl.pause();
+  $('modal-overlay').classList.remove('open');
+  document.body.style.overflow = '';
+  document.querySelectorAll('#modal-viewer-wrap .modal-photo, #modal-viewer-wrap model-viewer, #modal-viewer-wrap .mv-ar-btn-wrap, #modal-viewer-wrap .mv-zoom-col').forEach(el => el.remove());
+  $('mv-ar-badge').classList.remove('visible');
+}
+
+document.addEventListener('visibilitychange', () => {
+  const mvEl = document.querySelector('#modal-viewer-wrap model-viewer');
+  if (!mvEl) return;
+  document.hidden ? (typeof mvEl.pause === 'function' && mvEl.pause()) : (typeof mvEl.play === 'function' && mvEl.play());
+});
+$('modal-close').addEventListener('click', closeModal);
+$('modal-overlay').addEventListener('click', e => { if (e.target ===$('modal-overlay')) closeModal(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+/* ───────────── MENU FILTERS PLACEMENT ───────────── */
+const controlsEl = document.querySelector('.controls');
+const stageEl = document.querySelector('.stage');
+function placeControls(inStage) {
+  if (inStage && controlsEl.parentElement !== stageEl) stageEl.prepend(controlsEl);
+  if (!inStage && controlsEl.parentElement === stageEl) $('showcase').after(controlsEl);
+}
+
+/* ───────────── ZOOM-THROUGH SHOWCASE ───────────── */
+const CAT_ORDER = ['starter', 'main-course', 'dessert'];
+const catRank = c => { const i = CAT_ORDER.indexOf(c); return i < 0 ? 99 : i; };
+let syncLock = 0;
+let showList = [], showIdx = -1, showMVs = [];
+
+function renderShowcase() {
+  showList = allDishes.filter(d => d.glbPath && d.available).sort((a, b) => catRank(a.category) - catRank(b.category));
+  const sec = $('showcase');
+  if (!showList.length) { sec.style.display = 'none'; placeControls(false); return; }
+  sec.style.display = '';
+  placeControls(true);
+  sec.style.setProperty('--sh', `${showList.length * 80 + 100}vh`);
+  const stack = $('show-stack');
+  stack.innerHTML = '';
+  showMVs = showList.map(d => {
+    const mv = document.createElement('model-viewer');
+    const s = (d.scale ?? 0.25).toFixed(4);
+    Object.entries({
+      src: d.glbPath, poster: d.posterPath || '', alt: d.name,
+      scale: `${s} ${s} ${s}`,
+      ar: '', 'ar-modes': 'webxr quick-look', 'ar-placement': 'floor', 'ar-scale': 'auto',
+      'camera-orbit': '-40deg 72deg 130%', 'field-of-view': '30deg',
+      'min-camera-orbit': 'auto auto 25%', 'max-camera-orbit': 'auto auto 320%', 'shadow-intensity': '1', 'shadow-softness': '0.9',
+      exposure: '1.1', 'environment-image': 'neutral', 'interaction-prompt': 'none', 'disable-zoom': '', 'disable-pan': '',
+      loading: 'eager', reveal: 'auto', 'interpolation-decay': '50'
+    }).forEach(([k, v]) => mv.setAttribute(k, v));
+    mv.innerHTML = `<button slot="ar-button" style="display:none;"></button><button slot="exit-webxr-ar-button" style="display:none;"></button>`;
+    if (isIOS && d.usdzPath) mv.setAttribute('ios-src', d.usdzPath);
+    stack.appendChild(mv);
+    return mv;
+  });
+  $('sc-dots').innerHTML = showList.map((d, i) => `<button type="button" class="dot" data-i="${i}" aria-label="${esc(d.name)}"></button>`).join('');
+  $('sc-dots').querySelectorAll('.dot').forEach(b => b.addEventListener('click', () => scrollToShow(+b.dataset.i)));
+  showIdx = -1;
+  update();
+}
+
+function scrollToShow(i) {
+  const sec = $('showcase'), n = showList.length;
+  const top = sec.getBoundingClientRect().top + window.scrollY;
+  const span = sec.offsetHeight - window.innerHeight;
+  window.scrollTo({ top: top + span * (i + 0.3) / (n - 0.4), behavior: reduceMotion ? 'auto' : 'smooth' });
+}
+
+function jumpToCategory(cat) {
+  if (!showList.length) return;
+  const i = cat === 'all' ? 0 : showList.findIndex(d => d.category === cat);
+  if (i < 0) return;
+  syncLock = Date.now() + 1300;
+  scrollToShow(i);
+}
+
+function setShowDish(idx) {
+  showIdx = idx;
+  const d = showList[idx], n = showList.length, t = T();
+  if (activeCategory !== 'all' && d.category !== activeCategory && Date.now() > syncLock) {
+    activeCategory = d.category; renderTabs(); renderItems();
+  }
+  $('sc-count').textContent = `${String(idx + 1).padStart(2, '0')} / ${String(n).padStart(2, '0')}`;
+  $('sc-cat').textContent = catLabel(d.category);$('sc-name').textContent = d.name;
+  $('sc-desc').textContent = d.desc;
+  $('sc-desc').style.display = d.desc ? '' : 'none';
+  $('sc-price').innerHTML = `<span class="price-sym">₹</span>${d.price.toLocaleString('en-IN')}`;
