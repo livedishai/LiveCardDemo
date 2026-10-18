@@ -360,25 +360,6 @@
       align-items: center;
       pointer-events: auto;
     }
-
-    /* Dish info image overlay during AR: semi-transparent, positioned near the top */
-    .ar-info-image {
-      display: none;
-      position: fixed;
-      top: max(env(safe-area-inset-top), 16px);
-      left: 50%;
-      transform: translateX(-50%);
-      width: min(92vw, 520px);
-      max-height: 28vh;
-      object-fit: contain;
-      opacity: 0.5;
-      z-index: 10002;
-      pointer-events: none;
-      border-radius: 16px;
-    }
-    body.ar-info-visible .ar-info-image { display: block; }
-    /* Remove the old dish-switch/title strips from the AR presentation */
-    .ar-hud-top, .ar-bottom-bar { display: none !important; }
     .ar-dish-pill {
       background: rgba(20, 4, 5, 0.72);
       -webkit-backdrop-filter: blur(14px);
@@ -745,10 +726,6 @@
   </div>
 </model-viewer>
 
-<!-- Image 3: semi-transparent dish information overlay while AR is active.
-     Keep img3.jpeg in the same folder as this HTML file. -->
-<img class="ar-info-image" id="ar-info-image" src="img3.jpeg" alt="Dish details" />
-
 <div class="ar-flash" id="ar-flash"></div>
 
 <!-- Captured Item Preview Modal -->
@@ -1111,10 +1088,8 @@ $('capture-modal').addEventListener('click', e => {
 globalAR.addEventListener('ar-status', e => {
   if (e.detail.status === 'session-started' || e.detail.status === 'object-placed') {
     globalAR.classList.add('ar-active');
-    document.body.classList.add('ar-info-visible');
   } else if (e.detail.status === 'not-presenting' || e.detail.status === 'failed') {
     globalAR.classList.remove('ar-active');
-    document.body.classList.remove('ar-info-visible');
   }
 });
 
