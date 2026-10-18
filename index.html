@@ -141,7 +141,7 @@
     .sc-cat { font: 700 10px var(--f-sans); letter-spacing: .16em; text-transform: uppercase; color: var(--red-900); background: var(--gold-grad); padding: 3px 11px; border-radius: 99px; }
     .sc-name { font-family: var(--f-display); font-size: clamp(22px, 5.4vw, 32px); font-weight: 700; color: var(--red-800); line-height: 1.2; }
     .sc-desc { margin-top: 6px; font-size: 13px; line-height: 1.6; color: var(--ink-mid); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
-    .sc-tech { display: grid; gap: 6px; margin-top: 10px; }
+    .sc-tech { display: none; } /* Hidden as requested */
     .tech-row { display: flex; gap: 8px; align-items: flex-start; padding: 8px 11px; border-radius: 14px; background: rgba(255,255,255,0.5); border: 1px solid rgba(255,255,255,0.8); font-size: 12px; line-height: 1.45; color: var(--ink-mid); }
     .tech-row b { flex-shrink: 0; font: 800 10.5px var(--f-brand); letter-spacing: .12em; color: #fff; background: var(--red-grad); padding: 3px 8px; border-radius: 99px; margin-top: 1px; }
     .sc-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 12px; }
@@ -228,7 +228,7 @@
     .tag-new { background: rgba(192,18,26,0.12); color: var(--red-700); border: 1px solid rgba(192,18,26,0.3); }
     .tag-dotd { background: rgba(217,178,95,0.3); color: #7a5617; border: 1px solid rgba(169,125,44,0.5); }
     .dish-desc { font-size: 12.5px; line-height: 1.6; color: var(--ink-mid); margin-top: 8px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
-    .tech-line { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 9px; }
+    .tech-line { display: none; } /* Hidden as requested */
     .tech-chip { font: 600 10px var(--f-sans); letter-spacing: .03em; padding: 3px 9px; border-radius: 99px; background: rgba(255,255,255,0.6); border: 1px solid rgba(163,13,20,0.22); color: var(--red-800); }
     .tech-chip b { color: var(--gold-dk); font-weight: 800; margin-right: 2px; }
     .card-footer { margin-top: auto; padding-top: 12px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
@@ -290,7 +290,7 @@
     .modal-name { font-family: var(--f-display); font-size: 30px; font-weight: 700; color: var(--red-800); line-height: 1.2; }
     .modal-body .tags-row { margin: 12px 0 0; }
     .modal-desc { margin: 16px 0 14px; font-size: 14px; line-height: 1.8; color: var(--ink-mid); padding-left: 16px; border-left: 3px solid var(--gold); }
-    .modal-tech { display: grid; gap: 7px; margin-bottom: 20px; }
+    .modal-tech { display: none; } /* Hidden as requested */
     .modal-footer { display: flex; align-items: center; justify-content: space-between; padding-top: 18px; border-top: 1px solid rgba(169,125,44,0.4); }
     .modal-price { font-family: var(--f-display); font-size: 40px; font-weight: 700; color: var(--red-700); display: flex; align-items: baseline; gap: 3px; line-height: 1; }
     .modal-price .price-sym { font-size: 18px; }
@@ -452,7 +452,10 @@
         <div class="sc-top"><span class="sc-count" id="sc-count">01 / 01</span><span class="sc-cat" id="sc-cat"></span></div>
         <h3 class="sc-name" id="sc-name"></h3>
         <p class="sc-desc" id="sc-desc"></p>
-        
+        <div class="sc-tech" style="display:none;">
+          <div class="tech-row"><b>AR</b><span id="sc-ar-t"></span></div>
+          <div class="tech-row"><b>AI</b><span id="sc-ai-t"></span></div>
+        </div>
         <div class="sc-foot">
           <div class="sc-price" id="sc-price"></div>
           <button class="ar-btn" id="sc-ar" type="button">View in AR</button>
@@ -484,7 +487,7 @@
       <h2 class="modal-name" id="modal-name"></h2>
       <div class="tags-row" id="modal-tags"></div>
       <p class="modal-desc" id="modal-desc"></p>
-      <div class="modal-tech">
+      <div class="modal-tech" style="display:none;">
         <div class="tech-row"><b>AR</b><span id="modal-ar-t"></span></div>
         <div class="tech-row"><b>AI</b><span id="modal-ai-t"></span></div>
       </div>
@@ -590,7 +593,7 @@ const I18N = {
 
 const CAT_LABELS = {
   all:           { en: 'All', it: 'Tutti', kn: 'ಎಲ್ಲಾ', ta: 'அனைத்தும்', ml: 'എല്ലാം', te: 'అన్నీ' },
-  starter:       { en: 'Starters', it: 'Antipasti', kn: 'ಸ್ಟಾರ್ಟರ್ಸ್', ta: 'ஸ்டார்ட்டர்ஸ்', ml: 'സ്റ്റാർട്ടേഴ്സ്', te: 'స్టార్టర్స్' },
+  starter:       { en: 'Starters', it: 'Antipasti', kn: 'ಸ್ಟಾರ್ಟರ್ಸ್', ta: 'ஸ்டார்ட்டர்ஸ்', ml: 'സ്റ്റാർട്ടേഴ്സ്', te: 'స్టార్టర్ಸ್' },
   'main-course': { en: 'Main Course', it: 'Portata Principale', kn: 'ಮುಖ್ಯ ಖಾದ್ಯ', ta: 'முக்கிய உணவு', ml: 'മെയിൻ കോഴ്സ്', te: 'మెయిన్ కోర్స్' },
   dessert:       { en: 'Desserts', it: 'Dolci', kn: 'ಡೆಸರ್ಟ್', ta: 'இனிப்பு', ml: 'ഡെസേർട്ട്', te: 'డెజర్ట్స్' }
 };
@@ -709,7 +712,7 @@ function cardHTML(d) {
           <h3 class="dish-name">${esc(d.name)}</h3>
           <div class="tags-row">${tagHTML(d)}</div>
           <p class="dish-desc">${esc(d.desc)}</p>
-          <div class="tech-line">
+          <div class="tech-line" style="display:none;">
             ${d.glbPath ? `<span class="tech-chip"><b>AR</b>${esc(t.arChip)}</span>` : ''}
             <span class="tech-chip"><b>AI</b>${esc(aiShort(d))}</span>
           </div>
@@ -772,8 +775,7 @@ function openModal(id) {
   $('modal-desc').textContent = d.desc;
   $('modal-desc').style.display = d.desc ? '' : 'none';
   $('modal-price').innerHTML = `<span class="price-sym">₹</span>${d.price.toLocaleString('en-IN')}`;
-  $('modal-tags').innerHTML = tagHTML(d);
-  $('modal-ar-t').textContent = d.glbPath ? t.arNote : t.ftAR;
+  $('modal-tags').innerHTML = tagHTML(d);$('modal-ar-t').textContent = d.glbPath ? t.arNote : t.ftAR;
   $('modal-ai-t').textContent = aiLong(d);
 
   const arBadge = $('mv-ar-badge');
@@ -892,7 +894,7 @@ document.addEventListener('visibilitychange', () => {
   document.hidden ? (typeof mvEl.pause === 'function' && mvEl.pause()) : (typeof mvEl.play === 'function' && mvEl.play());
 });
 $('modal-close').addEventListener('click', closeModal);
-$('modal-overlay').addEventListener('click', e => { if (e.target === $('modal-overlay')) closeModal(); });
+$('modal-overlay').addEventListener('click', e => { if (e.target ===$('modal-overlay')) closeModal(); });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
 
 /* ───────────── MENU FILTERS PLACEMENT ─────────────
@@ -969,14 +971,12 @@ function setShowDish(idx) {
     activeCategory = d.category; renderTabs(); renderItems();
   }
   $('sc-count').textContent = `${String(idx + 1).padStart(2, '0')} / ${String(n).padStart(2, '0')}`;
-  $('sc-cat').textContent = catLabel(d.category);
-  $('sc-name').textContent = d.name;
+  $('sc-cat').textContent = catLabel(d.category);$('sc-name').textContent = d.name;
   $('sc-desc').textContent = d.desc;
   $('sc-desc').style.display = d.desc ? '' : 'none';
   $('sc-price').innerHTML = `<span class="price-sym">₹</span>${d.price.toLocaleString('en-IN')}`;
   $('sc-ar-t').textContent = t.arNote;
-  $('sc-ai-t').textContent = aiLong(d);
-  $('sc-dots').querySelectorAll('.dot').forEach((b, i) => b.classList.toggle('active', i === idx));
+  $('sc-ai-t').textContent = aiLong(d);$('sc-dots').querySelectorAll('.dot').forEach((b, i) => b.classList.toggle('active', i === idx));
   const sw = $('sc-swap'); sw.classList.remove('pop'); void sw.offsetWidth; sw.classList.add('pop');
 }
 
@@ -1013,7 +1013,7 @@ function updateShowcase() {
 $('sc-ar').addEventListener('click', () => { const d = showList[showIdx]; if (d) openModal(d.id); });
 
 /* ───────────── SCROLL ENGINE ───────────── */
-const heroEl = $('hero'), progressEl = $('progress');
+const heroEl = $('hero'), progressEl =$('progress');
 let ticking = false, heroH = 600, scrollFrac = 0, mouseX = 0, mouseY = 0;
 
 function updateCards(vh) {
@@ -1055,8 +1055,7 @@ window.addEventListener('pointermove', e => {
 }, { passive: true });
 
 /* ───────────── UI TEXT / LANGUAGE / INIT ───────────── */
-$('search').addEventListener('input', e => { query = e.target.value; renderItems(); });
-$('veg-toggle').addEventListener('click', e => {
+$('search').addEventListener('input', e => { query = e.target.value; renderItems(); });$('veg-toggle').addEventListener('click', e => {
   vegOnly = !vegOnly;
   e.currentTarget.setAttribute('aria-pressed', String(vegOnly));
   renderItems();
@@ -1078,10 +1077,8 @@ function applyUIText() {
   $('ui-hp2').textContent      = t.hp2;
   $('ui-hp3').textContent      = t.hp3;
   $('ui-scroll').textContent   = t.scroll;
-  $('z-in').setAttribute('aria-label', t.zoomIn);
-  $('z-out').setAttribute('aria-label', t.zoomOut);
-  $('sc-ar').innerHTML         = SVG_CUBE + esc(t.viewAR);
-  $('search').placeholder      = t.search;
+  $('z-in').setAttribute('aria-label', t.zoomIn);$('z-out').setAttribute('aria-label', t.zoomOut);
+  $('sc-ar').innerHTML         = SVG_CUBE + esc(t.viewAR);$('search').placeholder      = t.search;
   document.documentElement.lang = currentLang;
 }
 
