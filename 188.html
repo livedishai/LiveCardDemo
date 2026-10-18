@@ -222,6 +222,21 @@
     .veg-toggle[aria-pressed="true"] { background: var(--green-bg); color: var(--green); border-color: rgba(47,122,58,0.5); }
     .veg-toggle[aria-pressed="true"] .sw { background: var(--green); }
     .veg-toggle[aria-pressed="true"] .sw::after { transform: translateX(13px); }
+    .sticky-cart-btn {
+      display: inline-flex; align-items: center; gap: 7px; height: 46px; padding: 0 16px;
+      border-radius: 16px; background: var(--gold-grad); color: var(--red-900);
+      border: 1.5px solid #fff; font: 800 12px var(--f-sans); letter-spacing: .04em;
+      text-transform: uppercase; cursor: pointer; white-space: nowrap;
+      box-shadow: 0 8px 22px rgba(108,6,11,0.28), inset 0 1px 0 #fff;
+      transition: transform .22s var(--ease), box-shadow .22s;
+    }
+    .sticky-cart-btn:hover { transform: translateY(-1px) scale(1.02); box-shadow: 0 12px 26px rgba(108,6,11,0.38); }
+    .sticky-cart-btn .cart-pill-count {
+      display: inline-grid; place-items: center; min-width: 22px; height: 22px; padding: 0 6px;
+      border-radius: 999px; background: var(--red-grad); color: var(--gold-lt);
+      font: 800 11px/1 var(--f-sans);
+    }
+    .stage .sticky-cart-btn { height: 40px; padding: 0 13px; font-size: 11px; }
     .tabs-inner { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
     .tabs-inner::-webkit-scrollbar { display: none; }
     .tab-btn { flex-shrink: 0; cursor: pointer; padding: 9px 20px; border-radius: 999px; background: rgba(255,255,255,0.4); color: var(--red-900); border: 1px solid rgba(255,255,255,0.8); font: 600 12.5px var(--f-sans); letter-spacing: .03em; transition: all .3s var(--ease); white-space: nowrap; }
@@ -1353,7 +1368,7 @@
       <option value="ta">தமிழ்</option><option value="ml">മലയാളം</option><option value="te">తెలుగు</option>
     </select>
     <div class="hero-top-actions">
-      <button type="button" class="hero-table-cta" id="hero-open-composer-btn">🍽️ Set the Whole Table (3D/AR)</button>
+      <button type="button" class="hero-table-cta" id="hero-open-composer-btn">🛒 AR Cart (<span id="hero-cart-count">0</span>) · View on Table</button>
       <a href="#showcase" id="funzone-link" class="funzone-btn">🎮 FunZone</a>
     </div>
   </div>
@@ -1390,11 +1405,11 @@
     <!-- Multi-Dish "Set the Whole Table" Hero Callout -->
     <div class="hero-composer-strip">
       <div class="hcs-info">
-        <span class="hcs-badge">✦ NEW · Multi-Dish AR Table Composer (Android &amp; iPhone)</span>
-        <div class="hcs-title" id="ui-hcs-title">Place a Starter, Main Course &amp; Dessert on your table together in one 3D/AR scene.</div>
+        <span class="hcs-badge">✦ NEW · Multi-Dish AR Cart Table (Android &amp; iPhone)</span>
+        <div class="hcs-title" id="ui-hcs-title">Tap "🛒 Add to Cart" on any dishes, then click the Cart button to display all 3D dishes together on your real-world AR table.</div>
       </div>
       <div class="hcs-actions">
-        <button type="button" class="hcs-btn" id="hero-auto-3course-btn">✨ Build 3-Course Table</button>
+        <button type="button" class="hcs-btn" id="hero-auto-3course-btn">✨ Quick-Fill 3-Course Cart</button>
       </div>
     </div>
 
@@ -1425,6 +1440,10 @@
             <input id="search" type="search" placeholder="Search dishes…" autocomplete="off" />
           </label>
           <button class="veg-toggle" id="veg-toggle" aria-pressed="false" type="button"><span class="sw"></span><span id="ui-veg-only">Veg only</span></button>
+          <button class="sticky-cart-btn" id="sticky-cart-btn" type="button" aria-label="View Cart dishes on AR Table">
+            <span>🛒 Cart</span>
+            <span class="cart-pill-count" id="sticky-cart-count">0</span>
+          </button>
         </div>
         <div class="tabs-inner" id="tabs-inner"></div>
       </div>
@@ -1447,7 +1466,7 @@
         <div class="sc-foot">
           <div class="sc-price" id="sc-price"></div>
           <div class="sc-foot-btns">
-            <button class="table-add-btn" id="sc-add-table" type="button">+ Set Table</button>
+            <button class="table-add-btn" id="sc-add-table" type="button">🛒 Add to Cart</button>
             <button class="ar-btn" id="sc-ar" type="button">View On Table</button>
           </div>
         </div>
@@ -1469,17 +1488,17 @@
 <aside class="table-dock" id="table-dock" aria-label="Multi-Dish Table Composer Dock">
   <div class="table-dock-left">
     <div class="table-dock-meta">
-      <span class="table-dock-title" id="dock-title-label">🍽️ Whole Table Spread (0)</span>
-      <span class="table-dock-sub" id="dock-total-price">Select Starter, Main &amp; Dessert</span>
+      <span class="table-dock-title" id="dock-title-label">🛒 Your AR Table Cart (0)</span>
+      <span class="table-dock-sub" id="dock-total-price">Tap "🛒 Add to Cart" on dishes to view together in AR</span>
     </div>
     <div class="table-dock-slots" id="table-dock-slots"></div>
   </div>
   <div class="table-dock-actions">
     <button type="button" class="dock-btn-secondary" id="dock-auto-fill-btn">✨ 3-Course Preset</button>
-    <button type="button" class="dock-btn-secondary" id="dock-open-composer-btn">Customize 3D Table</button>
+    <button type="button" class="dock-btn-secondary" id="dock-open-composer-btn">3D Cart &amp; Layout</button>
     <button type="button" class="dock-btn-primary" id="dock-launch-ar-btn">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
-      <span id="dock-ar-btn-text">AR Whole Table</span>
+      <span id="dock-ar-btn-text">🛒 View Cart on AR Table</span>
     </button>
   </div>
 </aside>
@@ -1536,8 +1555,8 @@
     <div class="composer-body">
       <div class="composer-head-row">
         <div>
-          <h2 class="composer-title" id="ui-comp-title">Set the Whole Table · Multi-Dish AR</h2>
-          <p class="composer-sub" id="ui-comp-sub">Dynamically merges selected GLB dishes into one unified 3D &amp; USDZ table scene for Android WebXR and iPhone AR Quick Look.</p>
+          <h2 class="composer-title" id="ui-comp-title">🛒 AR Table Cart · All Chosen Dishes Together</h2>
+          <p class="composer-sub" id="ui-comp-sub">All dishes in your Cart are merged into one unified 3D &amp; USDZ scene so you can place your entire order on the real-world table at the same time.</p>
         </div>
         <div class="composer-preset-btns">
           <button type="button" class="preset-chip" id="comp-preset-3course">✨ Chef's 3-Course</button>
@@ -1584,7 +1603,7 @@
           </button>
           <button type="button" class="modal-ar-launch-btn" id="composer-native-ar-btn">
             <svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
-            <span id="composer-native-ar-text">Place Whole Table in AR</span>
+            <span id="composer-native-ar-text">🛒 Place All Cart Dishes on AR Table</span>
           </button>
         </div>
       </div>
@@ -1707,7 +1726,7 @@
       <div class="modal-footer">
         <div class="modal-price" id="modal-price"></div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-          <button type="button" class="table-add-btn" id="modal-add-table-btn">+ Set Table</button>
+          <button type="button" class="table-add-btn" id="modal-add-table-btn">🛒 Add to Cart</button>
           <div class="modal-note" id="scale-info"></div>
         </div>
       </div>
@@ -2138,7 +2157,7 @@ const I18N = {
         aiLGen: 'AI match: recommended from guest taste patterns.',
         aiSPick: 'Chef pick', aiSNew: 'New for you', aiSGen: 'Taste match',
         zoomIn: 'Zoom in', zoomOut: 'Zoom out', arSwipe: 'Swipe or tap to switch dish on table',
-        setTable: '+ Set Table', onTable: '✓ On Table', wholeTable: 'Whole Table Spread' },
+        setTable: '🛒 Add to Cart', onTable: '✓ In Cart', wholeTable: 'AR Table Cart' },
   it: { sub: 'Autentica Cucina Italiana', badge: 'Anteprima Interattiva 3D & AR', veg: 'vegetariano', loading: 'Caricamento...',
         search: 'Cerca piatti…', vegOnly: 'Solo veg', empty: 'Nessun piatto trovato', viewAR: 'Vedi sul tavolo', viewTable: 'Vedi sul tavolo',
         launching: 'Caricamento…', launch: 'Avvia AR', retry: 'Riprova', pick: 'scelta dello chef', isNew: 'novità',
@@ -2158,35 +2177,35 @@ const I18N = {
         aiLGen: 'AI: consigliato in base ai gusti degli ospiti.',
         aiSPick: 'Scelta chef', aiSNew: 'Nuovo per te', aiSVeg: 'Veg', aiSGen: 'Per i tuoi gusti',
         zoomIn: 'Ingrandisci', zoomOut: 'Riduci', arSwipe: 'Scorri o tocca per cambiare piatto',
-        setTable: '+ Tavolo', onTable: '✓ Sul Tavolo', wholeTable: 'Tavola Completa' },
+        setTable: '🛒 Aggiungi', onTable: '✓ Nel Carrello', wholeTable: 'Carrello AR' },
   kn: { sub: 'ಅಧಿಕೃತ ಇಟಾಲಿಯನ್ ಆಹಾರ', badge: '3D ಮತ್ತು AR ಮುನ್ನೋಟ', veg: 'ಸಸ್ಯಾಹಾರಿ', loading: 'ಲೋಡ್ ಆಗುತ್ತಿದೆ...',
         search: 'ಖಾದ್ಯಗಳನ್ನು ಹುಡುಕಿ…', vegOnly: 'ಸಸ್ಯಾಹಾರ ಮಾತ್ರ', empty: 'ಯಾವುದೇ ಖಾದ್ಯ ಸಿಗಲಿಲ್ಲ', viewAR: 'ಟೇಬಲ್ ಮೇಲೆ ನೋಡಿ', viewTable: 'ಟೇಬಲ್ ಮೇಲೆ ನೋಡಿ',
         launching: 'ಲೋಡ್ ಆಗುತ್ತಿದೆ…', launch: 'AR ಆರಂಭಿಸಿ', retry: 'ಮರುಪ್ರಯತ್ನ', pick: 'ಬಾಣಸಿಗರ ಆಯ್ಕೆ', isNew: 'ಹೊಸ',
         portion: 'ನಿಜವಾದ ಪ್ರಮಾಣ', footer: '3D ನೋಡಲು ಯಾವುದೇ ಖಾದ್ಯ ಟ್ಯಾಪ್ ಮಾಡಿ · ಬೆಲೆ ₹ ನಲ್ಲಿ · 🌿 ಸಸ್ಯಾಹಾರ ಲಭ್ಯ',
         footer2: 'AR ಗೆ ಹೊಂದಾಣಿಕೆಯ ಮೊಬೈಲ್ ಸಾಧನ ಬೇಕು', arReady: '✦ AR ಸಿದ್ಧ',
         s1: 'ಸ್ಕ್ಯಾನ್', s2: 'ಇರಿಸಿ', s3: 'ಅನುಭವಿಸಿ', showcase: 'ಬಾಣಸಿಗರ ಶೋಕೇಸ್', scroll: 'ಸ್ಕ್ರಾಲ್ ಮಾಡಿ',
-        arSwipe: 'ಖಾದ್ಯ ಬದಲಾಯಿಸಲು ಟ್ಯಾಪ್ ಮಾಡಿ', setTable: '+ ಟೇಬಲ್', onTable: '✓ ಟೇಬಲ್‌ನಲ್ಲಿ' },
+        arSwipe: 'ಖಾದ್ಯ ಬದಲಾಯಿಸಲು ಟ್ಯಾಪ್ ಮಾಡಿ', setTable: '🛒 ಕಾರ್ಟ್‌ಗೆ ಸೇರಿಸಿ', onTable: '✓ ಕಾರ್ಟ್‌ನಲ್ಲಿದೆ' },
   ta: { sub: 'உண்மையான இத்தாலிய உணவு', badge: '3D மற்றும் AR மாதிரிக்காட்சி', veg: 'சைவம்', loading: 'ஏற்றப்படுகிறது...',
         search: 'உணவுகளைத் தேடுக…', vegOnly: 'சைவம் மட்டும்', empty: 'உணவுகள் எதுவும் இல்லை', viewAR: 'மேசையில் காண்க', viewTable: 'மேசையில் காண்க',
         launching: 'ஏற்றப்படுகிறது…', launch: 'AR தொடங்கு', retry: 'மீண்டும்', pick: 'சமையல்காரர் தேர்வு', isNew: 'புதியது',
         portion: 'உண்மையான அளவு', footer: '3D-யில் காண எந்த உணவையும் தொடவும் · விலை ₹ · 🌿 சைவம் உண்டு',
         footer2: 'AR-க்கு ஆதரவு உள்ள மொபைல் தேவை', arReady: '✦ AR தயார்',
         s1: 'ஸ்கேன்', s2: 'வையுங்கள்', s3: 'அனுபவியுங்கள்', showcase: 'சமையல்காரர் சிறப்பு', scroll: 'ஸ்க்ரோல் செய்யவும்',
-        arSwipe: 'உணவை மாற்ற தட்டவும்', setTable: '+ மேசை', onTable: '✓ மேசையில்' },
+        arSwipe: 'உணவை மாற்ற தட்டவும்', setTable: '🛒 கூடையில் சேர்', onTable: '✓ கூடையில் உள்ளது' },
   ml: { sub: 'ആധികാരിക ഇറ്റാലിയൻ വിഭവങ്ങൾ', badge: '3D & AR പ്രിവ്യൂ', veg: 'വെജ്', loading: 'ലോഡ് ചെയ്യുന്നു...',
         search: 'വിഭവങ്ങൾ തിരയുക…', vegOnly: 'വെജ് മാത്രം', empty: 'വിഭവങ്ങളൊന്നും കണ്ടെത്തിയില്ല', viewAR: 'മേശയിൽ കാണുക', viewTable: 'മേശയിൽ കാണുക',
         launching: 'ലോഡ് ചെയ്യുന്നു…', launch: 'AR തുടങ്ങുക', retry: 'വീണ്ടും', pick: 'ഷെഫിന്റെ തിരഞ്ഞെടുപ്പ്', isNew: 'പുതിയത്',
         portion: 'യഥാർത്ഥ അളവ്', footer: '3D-യിൽ കാണാൻ വിഭവം ടാപ്പ് ചെയ്യുക · വില ₹ · 🌿 വെജ് ലഭ്യം',
         footer2: 'AR-ന് അനുയോജ്യമായ മൊബൈൽ ആവശ്യമാണ്', arReady: '✦ AR തയ്യാർ',
         s1: 'സ്കാൻ', s2: 'വയ്ക്കുക', s3: 'അനുഭവിക്കുക', showcase: 'ഷെഫിന്റെ ഷോകേസ്', scroll: 'സ്ക്രോൾ ചെയ്യുക',
-        arSwipe: 'വിഭവം മാറ്റാൻ ടാപ്പ് ചെയ്യുക', setTable: '+ ടേബിൾ', onTable: '✓ ടേബിളിൽ' },
+        arSwipe: 'വിഭവം മാറ്റാൻ ടാപ്പ് ചെയ്യുക', setTable: '🛒 കാർട്ടിലേക്ക്', onTable: '✓ കാർട്ടിലുണ്ട്' },
   te: { sub: 'ప్రామాణిక ఇటాలియన్ వంటకాలు', badge: '3D & AR ప్రివ్యూ', veg: 'శాఖాహారం', loading: 'లోడ్ అవుతోంది..',
         search: 'వంటకాలను వెతకండి…', vegOnly: 'శాఖాహారం మాత్రమే', empty: 'వంటకాలు కనబడలేదు', viewAR: 'టేబుల్పై చూడండి', viewTable: 'టేబుల్పై చూడండి',
         launching: 'లోడ్ అవుతోంది…', launch: 'AR ప్రారంభించండి', retry: 'మళ్లీ', pick: 'చెఫ్ ఎంపిక', isNew: 'కొత్త',
         portion: 'అసలు పరిమాణం', footer: '3Dలో చూడటానికి వంటకాన్ని నొక్కండి · ధరలు ₹ · 🌿 శాఖాహారం అందుబాటులో',
         footer2: 'ARకు అనుకూల మొబైల్ అవసరం', arReady: '✦ AR సిద్ధం',
         s1: 'స్కాన్', s2: 'ఉంచండి', s3: 'అనుభవించండి', showcase: 'చెఫ్ షోకేస్', scroll: 'స్క్రోల్ చేయండి',
-        arSwipe: 'వంటకం మార్చడానికి ట్యాప్ చేయండి', setTable: '+ టేబుల్', onTable: '✓ టేబుల్‌పై' }
+        arSwipe: 'వంటకం మార్చడానికి ట్యాప్ చేయండి', setTable: '🛒 కార్ట్‌లో చేర్చు', onTable: '✓ కార్ట్‌లో ఉంది' }
 };
 
 const CAT_LABELS = {
@@ -2323,7 +2342,7 @@ function cardHTML(d) {
         <div class="card-thumb">
           ${thumb}
           ${d.glbPath ? `<span class="ar-pill">${SVG_CUBE}AR</span>` : ''}
-          ${inTable ? `<span class="table-badge-pill">🍽️ Table</span>` : ''}
+          ${inTable ? `<span class="table-badge-pill">🛒 In Cart</span>` : ''}
         </div>
         <div class="card-body">
           <h3 class="dish-name">${esc(d.name)}</h3>
@@ -2422,14 +2441,14 @@ function toggleDishInTable(id) {
   const idx = tableDishIds.indexOf(id);
   if (idx >= 0) {
     tableDishIds.splice(idx, 1);
-    showToast(`Removed ${d.name} from table spread`);
+    showToast(`Removed ${d.name} from Cart (${tableDishIds.length} in Cart)`);
   } else {
     if (tableDishIds.length >= 6) {
-      showToast('Up to 6 dishes can be placed on the table at once');
+      showToast('Up to 6 dishes can be placed in the AR Cart at once');
       return;
     }
     tableDishIds.push(id);
-    showToast(`Added ${d.name} to Whole Table Spread (${tableDishIds.length})`);
+    showToast(`🛒 Added ${d.name} to Cart (${tableDishIds.length} ${tableDishIds.length === 1 ? 'item' : 'items'}) — Click Cart to view on AR Table!`);
   }
   renderItems();
   syncShowcaseAddButton();
@@ -2471,10 +2490,17 @@ function autoPopulateThreeCourseSpread(openComposerAfter = false) {
 function renderTableDock() {
   const selected = getSelectedTableDishes();
   const total = selected.reduce((sum, d) => sum + d.price, 0);
-  $('dock-title-label').textContent = `🍽️ Whole Table Spread (${selected.length})`;
+  $('dock-title-label').textContent = `🛒 Your AR Table Cart (${selected.length} ${selected.length === 1 ? 'Dish' : 'Dishes'})`;
   $('dock-total-price').textContent = selected.length
-    ? `Total ₹${total.toLocaleString('en-IN')} · Android & iPhone AR Ready`
-    : 'Pick Starter + Main + Dessert to preview together';
+    ? `Total ₹${total.toLocaleString('en-IN')} · Click Cart button to display all on AR Table`
+    : 'Tap "🛒 Add to Cart" on dishes below, then click Cart to display all in AR';
+  if ($('sticky-cart-count')) $('sticky-cart-count').textContent = String(selected.length);
+  if ($('hero-cart-count')) $('hero-cart-count').textContent = String(selected.length);
+  if ($('dock-ar-btn-text')) {
+    $('dock-ar-btn-text').textContent = selected.length
+      ? `🛒 Cart (${selected.length}) · View All on AR Table`
+      : `🛒 View Cart on AR Table`;
+  }
 
   const slotsEl = $('table-dock-slots');
   const courseRoles = [
@@ -2718,12 +2744,18 @@ async function launchWholeTableNativeAR(triggerBtn) {
   if (assets.usdzUrl) globalAR.setAttribute('ios-src', assets.usdzUrl);
   globalAR.setAttribute('src', assets.glbUrl);
 
-  const activateMergedAR = () => {
+  const activateMergedAR = async () => {
     try {
-      globalAR.activateAR();
+      if (globalAR.canActivateAR) {
+        await globalAR.activateAR();
+      } else {
+        openTableComposerModal();
+        if (!cameraStream) toggleLiveCameraARMode();
+      }
     } catch (err) {
-      console.warn('WebXR activation fallback to 3D Table Composer:', err);
+      console.warn('WebXR activation fallback to Live Camera AR Table:', err);
       openTableComposerModal();
+      if (!cameraStream) toggleLiveCameraARMode();
     }
   };
 
@@ -3278,7 +3310,22 @@ $('modal-add-table-btn').addEventListener('click', () => {
 });
 
 /* ───────────── BIND MULTI-DISH TABLE COMPOSER CONTROLS ───────────── */
-$('hero-open-composer-btn').addEventListener('click', openTableComposerModal);
+$('hero-open-composer-btn').addEventListener('click', e => {
+  if (tableDishIds.length > 0) {
+    launchWholeTableNativeAR(e.currentTarget);
+  } else {
+    showToast('🛒 Add dishes to your Cart first, or tap 3-Course Preset!');
+    openTableComposerModal();
+  }
+});
+$('sticky-cart-btn').addEventListener('click', e => {
+  if (tableDishIds.length > 0) {
+    launchWholeTableNativeAR(e.currentTarget);
+  } else {
+    showToast('🛒 Add dishes to your Cart first, or tap 3-Course Preset!');
+    openTableComposerModal();
+  }
+});
 $('hero-auto-3course-btn').addEventListener('click', () => autoPopulateThreeCourseSpread(true));
 $('dock-auto-fill-btn').addEventListener('click', () => autoPopulateThreeCourseSpread(false));
 $('dock-open-composer-btn').addEventListener('click', openTableComposerModal);
@@ -3433,8 +3480,8 @@ async function init() {
   allDishes = rawRows.map(rowToDish).filter(d => d.name);
   loadingEl.style.display = 'none';
   container.style.display = 'block';
-  // Pre-load default 3-course table spread (Starter + Main Course + Dessert)
-  autoPopulateThreeCourseSpread(false);
+  // Start with empty Cart so user can choose items with "🛒 Add to Cart" and click Cart to launch AR
+  tableDishIds = [];
   renderTabs();
   renderItems();
   renderShowcase();
