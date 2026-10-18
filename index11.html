@@ -399,9 +399,9 @@
 
       <div class="zoom-ctl glass" id="zoom-ctl">
         <button class="zbtn" id="z-out" type="button" aria-label="Zoom out">−</button>
-        <input id="z-range" type="range" min="0.5" max="2.5" step="0.05" value="0.7" aria-label="Zoom" />
+        <input id="z-range" type="range" min="0.4" max="2.0" step="0.05" value="0.55" aria-label="Zoom" />
         <button class="zbtn" id="z-in" type="button" aria-label="Zoom in">+</button>
-        <span class="zval" id="z-val">0.7×</span>
+        <span class="zval" id="z-val">0.55×</span>
       </div>
     </div>
 
@@ -529,7 +529,7 @@ const I18N = {
 
 const CAT_LABELS = {
   all:           { en: 'All', it: 'Tutti', kn: 'ಎಲ್ಲಾ', ta: 'அனைத்தும்', ml: 'എല്ലാം', te: 'అన్నీ' },
-  starter:       { en: 'Starters', it: 'Antipasti', kn: 'ಸ್ಟಾರ್ಟರ್ಸ್', ta: 'ஸ்டார்ட்டர்ஸ்', ml: 'സ്റ്റാർട്ടേഴ്സ്', te: 'స్టార్టర్ಸ್' },
+  starter:       { en: 'Starters', it: 'Antipasti', kn: 'ಸ್ಟಾರ್ಟರ್ಸ್', ta: 'ஸ்டார்ட்டர்ஸ்', ml: 'സ്റ്റാർട്ടേഴ്സ്', te: 'స్టార్టర్స్' },
   'main-course': { en: 'Main Course', it: 'Portata Principale', kn: 'ಮುಖ್ಯ ಖಾದ್ಯ', ta: 'முக்கிய உணவு', ml: 'മെയിൻ കോഴ്സ്', te: 'మెయిన్ కోర్స్' },
   dessert:       { en: 'Desserts', it: 'Dolci', kn: 'ಡೆಸರ್ಟ್', ta: 'இனிப்பு', ml: 'ഡെസേർട്ട്', te: 'డెజర్ట్స్' }
 };
@@ -831,17 +831,17 @@ function placeControls(inStage) {
 const CAT_ORDER = ['starter', 'main-course', 'dessert'];
 const catRank = c => { const i = CAT_ORDER.indexOf(c); return i < 0 ? 99 : i; };
 let syncLock = 0;
-let showList = [], showIdx = -1, showZoom = 1.428, showMVs = [];
+let showList = [], showIdx = -1, showZoom = 1.818, showMVs = [];
 
 function setZoomUI(level) {
   $('z-range').value = level;
-  $('z-val').textContent = level.toFixed(1) + '×';
+  $('z-val').textContent = level.toFixed(2) + '×';
   showZoom = 1 / level;
   requestUpdate();
 }
 $('z-range').addEventListener('input', e => setZoomUI(+e.target.value));
-$('z-in').addEventListener('click',  () => setZoomUI(clamp(+$('z-range').value + 0.3, 0.5, 2.5)));
-$('z-out').addEventListener('click', () => setZoomUI(clamp(+$('z-range').value - 0.3, 0.5, 2.5)));
+$('z-in').addEventListener('click',  () => setZoomUI(clamp(+$('z-range').value + 0.2, 0.4, 2.0)));
+$('z-out').addEventListener('click', () => setZoomUI(clamp(+$('z-range').value - 0.2, 0.4, 2.0)));
 
 function renderShowcase() {
   showList = allDishes.filter(d => d.glbPath && d.available).sort((a, b) => catRank(a.category) - catRank(b.category));
@@ -855,8 +855,8 @@ function renderShowcase() {
   showMVs = showList.map(d => {
     const mv = document.createElement('model-viewer');
     Object.entries({
-      src: d.glbPath, poster: d.posterPath || '', alt: d.name, 'camera-orbit': '-40deg 72deg 190%', 'field-of-view': '30deg',
-      'min-camera-orbit': 'auto auto 25%', 'max-camera-orbit': 'auto auto 320%', 'shadow-intensity': '1', 'shadow-softness': '0.9',
+      src: d.glbPath, poster: d.posterPath || '', alt: d.name, 'camera-orbit': '-40deg 68deg 280%', 'field-of-view': '32deg',
+      'min-camera-orbit': 'auto auto 25%', 'max-camera-orbit': 'auto auto 350%', 'shadow-intensity': '1', 'shadow-softness': '0.9',
       exposure: '1.1', 'environment-image': 'neutral', 'interaction-prompt': 'none', 'disable-zoom': '', 'disable-pan': '',
       loading: 'eager', reveal: 'auto', 'interpolation-decay': '50'
     }).forEach(([k, v]) => mv.setAttribute(k, v));
@@ -916,16 +916,16 @@ function updateShowcase() {
     let u = f - i;
     if (i === 0 && u < 0) u = 0;
     if (i === n - 1 && u > 0.6) u = 0.6;
-    let rad = 190, op = 0;
+    let rad = 280, op = 0;
     if (u >= -0.4 && u < 1) {
-      if (u < 0)        { const t = (u + 0.4) / 0.4; rad = lerp(380, 190, 1 - Math.pow(1 - t, 3)); op = t; }
-      else if (u < 0.6) { rad = lerp(190, 110, u / 0.6); op = 1; }
-      else              { const t = (u - 0.6) / 0.4; rad = lerp(110, 40, t * t); op = 1 - ease(t); }
+      if (u < 0)        { const t = (u + 0.4) / 0.4; rad = lerp(450, 280, 1 - Math.pow(1 - t, 3)); op = t; }
+      else if (u < 0.6) { rad = lerp(280, 160, u / 0.6); op = 1; }
+      else              { const t = (u - 0.6) / 0.4; rad = lerp(160, 60, t * t); op = 1 - ease(t); }
     }
     mv.style.opacity = op.toFixed(3);
     mv.style.visibility = op > 0.01 ? 'visible' : 'hidden';
     mv.style.zIndex = u >= 0 ? 2 : 1;
-    if (op > 0.01) mv.cameraOrbit = `${(-40 + clamp(u, -0.4, 1) * 200).toFixed(1)}deg 72deg ${(rad * showZoom).toFixed(1)}%`;
+    if (op > 0.01) mv.cameraOrbit = `${(-40 + clamp(u, -0.4, 1) * 200).toFixed(1)}deg 68deg ${(rad * showZoom).toFixed(1)}%`;
   });
 }
 
